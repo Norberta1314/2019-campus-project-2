@@ -1,0 +1,26 @@
+[
+	{
+		"pk":1,
+		"model": "auth.user", 
+		"fields": {
+			"username": "144115213175309478",                     
+			"last_name": "",
+			"password": "", 
+			"is_staff": 1,
+			"is_active": 1,                     
+			"is_superuser": 1
+		}
+	},
+	{
+		"pk":2,
+		"model": "auth.user", 
+		"fields": {
+			"username": "144115213260411069",                                 
+			"last_name": "",
+			"password": "", 
+			"is_staff": 1,
+			"is_active": 1,                                 
+			"is_superuser": 1
+		}
+	}
+]
