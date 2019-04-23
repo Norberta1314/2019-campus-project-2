@@ -43,7 +43,7 @@ const checkStatus = response => {
  * @return {object}           An object containing either "data" or "err"
  */
 // const baseURL = process.env.NODE_ENV === 'production' ? 'https://api.ipingdong.com' : 'http://192.168.99.3:3010';
-const baseURL = 'https://api.ipingdong.com'
+const baseURL = window.site_url
 // const baseURL = 'https://api.ipingdong.com';
 export default function request(url, option) {
   const defaultOptions = {
