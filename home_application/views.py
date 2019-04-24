@@ -2,7 +2,7 @@
 import json
 
 from django.http import JsonResponse, response, HttpResponse
-from django.views.decorators.http import require_POST, require_GET
+from django.views.decorators.http import require_POST, require_GET, require_http_methods
 
 from bkoauth.jwt_client import JWTClient
 from bkoauth.utils import transform_uin
@@ -119,6 +119,19 @@ def create_organization(request):
 
 
 """
+分发 get delete put请求
+"""
+@require_http_methods(["GET", "DELETE", "PUT"])
+def organization_get_put_delete(request, organization_id):
+    if request.method == "GET":
+        pass
+    if request.method == "DELETE":
+        return del_organization(request, organization_id)
+    if request.method == "PUT":
+        return update_organiztion(request, organization_id)
+
+
+"""
 @api {POST} /ogranization/:id
 @apiName updateOrganization
 @apiGroup superAdmin
@@ -139,7 +152,8 @@ def create_organization(request):
         ]
     }
 """
-@require_POST
+
+
 def update_organiztion(request, organization_id):
     if not request.user.is_admin():
         return HttpResponse(status=401, content=u'无此权限')
@@ -163,11 +177,12 @@ def update_organiztion(request, organization_id):
 
 
 """
-@api {POST} /ogranization/del/:id
+@api {DELETE} /ogranization/:id
 @apiName deleteOrganization
 @apiGroup superAdmin
 """
-@require_POST
+
+
 def del_organization(request, organization_id):
     if not request.user.is_admin():
         return HttpResponse(status=401, content=u'无此权限')
