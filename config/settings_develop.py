@@ -6,8 +6,9 @@
 
 
 try:
-    from local_settings import LOCAL_APP_CODE, LOCAL_SECRET_KEY, LOCAL_DATABASE
-except:
+    from local_settings import LOCAL_APP_CODE, LOCAL_SECRET_KEY, LOCAL_DATABASE, LOCAL_QINIU_ACCESS_KEY, \
+        LOCAL_QINIU_SECRET_KEY, LOCAL_QINIU_BUCKET_NAME, LOCAL_QINIU_BUCKET_DOMAIN
+except BaseException:
     LOCAL_APP_CODE = ''
     LOCAL_SECRET_KEY = ''
     LOCAL_DATABASE = {
@@ -53,6 +54,14 @@ BROKER_URL = 'amqp://guest:guest@127.0.0.1:5672/'
 BK_URL = 'http://o.qcloud.com/console'
 # 静态资源地址：
 # REMOTE_STATIC_URL = '%s/static_api/' % BK_URL
+
+# ===============================================================================
+# 七牛云
+# ===============================================================================
+QINIU_ACCESS_KEY = LOCAL_QINIU_ACCESS_KEY
+QINIU_SECRET_KEY = LOCAL_QINIU_SECRET_KEY
+QINIU_BUCKET_NAME = LOCAL_QINIU_BUCKET_NAME
+QINIU_BUCKET_DOMAIN = LOCAL_QINIU_BUCKET_DOMAIN
 
 # ===============================================================================
 # 去除没有必要的警告

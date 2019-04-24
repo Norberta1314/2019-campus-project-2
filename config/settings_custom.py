@@ -82,3 +82,13 @@ LOG_LEVEL_PRODUCT = 'ERROR'
 # 统一权限管理功能开关
 # ===============================================================================
 ENABLE_BK_AUTH = True
+
+
+# ===============================================================================
+# 七牛云对象存储服务配置
+# ===============================================================================
+QINIU_ACCESS_KEY = ''
+QINIU_SECRET_KEY = ''
+QINIU_BUCKET_NAME = ''
+QINIU_BUCKET_DOMAIN = ''
+DEFAULT_FILE_STORAGE = 'qiniustorage.backends.QiniuStorage'

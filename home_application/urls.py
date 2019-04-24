@@ -7,4 +7,5 @@ urlpatterns = patterns(
     (r'^$', 'home'),
     (r'^dev_guide/$', 'dev_guide'),
     (r'^contact/$', 'contact'),
+    (r'^organization/$', 'create_organization'),
 )

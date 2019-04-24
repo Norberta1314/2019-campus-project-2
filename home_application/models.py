@@ -4,6 +4,7 @@
 
 
 # import from lib
+from django.utils import timezone
 from django.db import models
 from django.utils.translation import ugettext_lazy as _
 
@@ -11,43 +12,119 @@ from django.utils.translation import ugettext_lazy as _
 from account.models import BkUser
 
 
+class OrganizationsManager(models.Manager):
+    def create_organization(self, data, user):
+        obj = self.create(name=data['name'], update_user=user)
+        OrganizationsUser.create_heads(data['head'], obj)
+        OrganizationsUser.create_eva_members(data['eva_member'], obj)
+        return obj
 
 
-class Organiztions(models.Model):
-    name = models.CharField(max_length=255, verbose_name='所属组织')
-    head = models.TextField(verbose_name='负责人员 json序列化')
-    eva_member = models.TextField(verbose_name='参评人员 json序列化')
+class Organizations(models.Model):
+    name = models.CharField(max_length=255, verbose_name='所属组织', unique=True)
+    """
+        josn 序列化不好查询和删除 改为映射表
+    """
+    # head = models.TextField(verbose_name='负责人员 json序列化')
+    # eva_member = models.TextField(verbose_name='参评人员 json序列化')
     update_user = models.ForeignKey(BkUser, verbose_name='更新人')
-    update_time = models.DateField(auto_now=True, verbose_name='更新时间')
-    create_time =models.DateField(auto_created=True, verbose_name='创建时间')
+    update_time = models.DateTimeField(auto_now=True, verbose_name='更新时间')
+    create_time = models.DateTimeField(
+        auto_created=True,
+        default=timezone.now,
+        verbose_name='创建时间')
     soft_del = models.BooleanField(default=False, verbose_name='软删除')
 
+    objects = OrganizationsManager()
 
     class Meta:
         db_table = 'organizations'
+        permissions = (
+        )
+
+    def get_head(self):
+        pass
+
+    def get_eva_member(self):
+        pass
+
+    @staticmethod
+    def is_head(user):
+        pass
+
+    @staticmethod
+    def is_eva_member(user):
+        pass
+
+    def to_json(self):
+        pass
 
 
+class OrganizationsUser(models.Model):
+    organization = models.ForeignKey(Organizations)
+    user = models.CharField(max_length=20, verbose_name='人员qq号')
+    TYPE_CHOICES = (
+        (u'0', u'负责人员'),
+        (u'1', u'参评人员'),
+    )
+    type = models.CharField(max_length=1, choices=TYPE_CHOICES)
 
+    class Meta:
+        permissions = (
+
+        )
+
+    @classmethod
+    def del_heads(cls, organization):
+        cls.objects.filter(organization=organization, type=u'0').delete()
+
+    @classmethod
+    def del_eva_members(cls, organization):
+        cls.objects.filter(organization=organization, type=u'1').delete()
+
+    @classmethod
+    def create_heads(cls, heads, organ):
+        for item in heads:
+            obj = cls(user=item, organization=organ, type=u'0')
+            obj.save()
+
+    @classmethod
+    def create_eva_members(cls, eva_members, organ):
+        for item in eva_members:
+            obj = cls(user=item, organization=organ, type=u'1')
+            obj.save()
 
 
 class Awards(models.Model):
     name = models.CharField(max_length=255, verbose_name='奖项名称')
     content = models.TextField(verbose_name='评价条件')
     LEVEL_CHOICES = (
-        (u'0', '中心级'),
-        (u'1', '部门级'),
-        (u'2', '小组级'),
-        (u'3', '公司级'),
+        (u'0', u'中心级'),
+        (u'1', u'部门级'),
+        (u'2', u'小组级'),
+        (u'3', u'公司级'),
     )
-    level = models.CharField(max_length=1, choices=LEVEL_CHOICES, verbose_name='奖项级别')
-    organiztion = models.ForeignKey(Organiztions, verbose_name='所属组织')
-    start_time = models.DateField(verbose_name='开始时间')
-    end_time = models.DateField(verbose_name='结束时间')
+    level = models.CharField(
+        max_length=1,
+        choices=LEVEL_CHOICES,
+        verbose_name='奖项级别')
+    organiztion = models.ForeignKey(Organizations, verbose_name='所属组织')
+    start_time = models.DateTimeField(verbose_name='开始时间')
+    end_time = models.DateTimeField(verbose_name='结束时间')
     have_attachment = models.BooleanField(default=False)
     is_active = models.BooleanField(default=True, verbose_name='生效or过期')
+    soft_del = models.BooleanField(default=False, verbose_name='软删除')
 
     class Meta:
         db_table = 'awards'
+        permissions = (
+            ("eva_awards", "Can Evaluation Award"),
+        )
+
+    def delete(self, using=None):
+        self.soft_del = True
+        self.save()
+
 
 class Attachment(models.Model):
     real_name = models.CharField(max_length=255, verbose_name='文件名称')
@@ -64,17 +141,20 @@ class MyApply(models.Model):
     attachment = models.ForeignKey(Attachment, verbose_name='附件')
 
     STATE_CHOICES = (
-        (u'0', '申报中'),
-        (u'1', '未通过'),
-        (u'2', '已通过'),
-        (u'3', '未获奖'),
-        (u'4', '已获奖'),
+        (u'0', u'申报中'),
+        (u'1', u'未通过'),
+        (u'2', u'已通过'),
+        (u'3', u'未获奖'),
+        (u'4', u'已获奖'),
     )
-    state = models.CharField(max_length=1, choices=STATE_CHOICES)
-    remark = models.TextField('评语')
-    apply_time = models.DateField(auto_created=True)
+    state = models.CharField(max_length=1, choices=STATE_CHOICES, default='0')
+    remark = models.TextField(blank=True, verbose_name='评语')
+    apply_time = models.DateTimeField(auto_created=True)
+    soft_del = models.BooleanField(default=False, verbose_name='软删除')
 
     class Meta:
         db_table = 'my_applys'
 
-
+    def delete(self, using=None):
+        self.soft_del = True
+        self.save()

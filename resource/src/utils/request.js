@@ -1,6 +1,7 @@
 import fetch from 'dva/fetch';
 import { notification } from 'antd';
-import router from 'umi/router';
+import { get } from './cookie'
+// import router from 'umi/router';
 
 const codeMessage = {
   200: '服务器成功返回请求的数据。',
@@ -59,6 +60,7 @@ export default function request(url, option) {
       newOptions.headers = {
         Accept: 'application/json',
         'Content-Type': 'application/json; charset=utf-8',
+        'X-CSRFToken': get('csrftoken'),
         ...newOptions.headers,
       };
       newOptions.body = JSON.stringify(newOptions.body);
