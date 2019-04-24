@@ -76,11 +76,65 @@ def create_organization(request):
     return HttpResponse(status=201)
 
 
+"""
+@api {POST} /ogranization/:id
+@apiName updateOrganization
+@apiGroup superAdmin
+
+@apiParam {String} name 组织名称
+@apiParam {Array}  head 负责人
+@apiParam {Array}  eva_member 评议人员
+@apiParamExample {json} Request-Example:
+    {
+        name: "蓝鲸",
+        head: [
+            "7047xxxxx",
+            "2234xxxxx",
+        ],
+        eva_member: [
+            "xxxxxx",
+            "xxxxxx",
+        ]
+    }
+"""
 @require_POST
-def updage_organiztion(request):
-    pass
+def update_organiztion(request, organization_id):
+    if not request.user.is_superuser():
+        return HttpResponse(status=401, content=u'无此权限')
+
+    data = {}
+    try:
+        data = json.dumps(request.body)
+        valid_organization(data)
+    except Exception as e:
+        return HttpResponse(status=422, content=u'%s' % e.message)
+
+    organization = {}
+    try:
+        organization = Organizations.objects.get(id=organization_id)
+        Organizations.objects.update_organization(
+            organization, data, request.user)
+    except Exception as e:
+        return HttpResponse(status=400)
+
+    return HttpResponse(status=201)
 
 
+"""
+@api {POST} /ogranization/del/:id
+@apiName deleteOrganization
+@apiGroup superAdmin
+"""
 @require_POST
-def del_organiztion(request):
-    pass
+def del_organization(request, organization_id):
+    if not request.user.is_superuser():
+        return HttpResponse(status=401, content=u'无此权限')
+
+    organization = {}
+    try:
+        organization = Organizations.objects.get(id=organization_id)
+        organization.delete()
+    except Exception as e:
+        return HttpResponse(status=400)
+
+    return HttpResponse(status=204)
