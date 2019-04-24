@@ -59,7 +59,7 @@ def contact(request):
 
 @require_POST
 def create_organization(request):
-    if not request.user.is_authenticated():
+    if not request.user.is_superuser():
         return HttpResponse(status=401, content=u'无此权限')
     data = {}
     try:
