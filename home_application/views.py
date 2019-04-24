@@ -38,7 +38,7 @@ def contact(request):
 
 """
 @api {get} /user
-@apiName 获取用户信息
+@apiDescription 获取用户信息
 @apiGroup all user
 @apiSuccessExample {json} Success-Response:
     {
@@ -77,9 +77,9 @@ def user_info(request):
 
 
 """
-@api {POST} /ogranization
-@apiName createOrganization
-@apiGroup superAdmin
+@api {POST} /organization
+@apiDescription 创建一个组织
+@apiGroup admin
 
 @apiParam {String} name 组织名称
 @apiParam {Array}  head 负责人
@@ -121,6 +121,8 @@ def create_organization(request):
 """
 分发 get delete put请求
 """
+
+
 @require_http_methods(["GET", "DELETE", "PUT"])
 def organization_get_put_delete(request, organization_id):
     if request.method == "GET":
@@ -132,9 +134,9 @@ def organization_get_put_delete(request, organization_id):
 
 
 """
-@api {POST} /ogranization/:id
-@apiName updateOrganization
-@apiGroup superAdmin
+@api {PUT} /organization/:id 
+@apiDescription 更新组织信息
+@apiGroup admin
 
 @apiParam {String} name 组织名称
 @apiParam {Array}  head 负责人
@@ -177,9 +179,9 @@ def update_organiztion(request, organization_id):
 
 
 """
-@api {DELETE} /ogranization/:id
-@apiName deleteOrganization
-@apiGroup superAdmin
+@api {DELETE} /organization/:id
+@apiDescription 删除组织
+@apiGroup admin
 """
 
 
@@ -194,4 +196,4 @@ def del_organization(request, organization_id):
     except Exception as e:
         return HttpResponse(status=400)
 
-    return HttpResponse(status=204)
+    return HttpResponse(status=204, content=u'删除成功')

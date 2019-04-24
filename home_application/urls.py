@@ -8,6 +8,6 @@ urlpatterns = patterns(
     (r'^dev_guide/$', 'dev_guide'),
     (r'^contact/$', 'contact'),
     (r'^user$', 'user_info'),
-    (r'^organization/$', 'create_organization'),
+    (r'^organization$', 'create_organization'),
     (r'^organization/([0-9]{1,})$', 'organization_get_put_delete'),
 )

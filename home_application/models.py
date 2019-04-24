@@ -55,6 +55,10 @@ class Organizations(models.Model):
         permissions = (
         )
 
+    def delete(self, using=None):
+        self.soft_del = True
+        self.save()
+
     def get_head(self):
         pass
 
