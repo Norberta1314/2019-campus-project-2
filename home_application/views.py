@@ -2,10 +2,12 @@
 import json
 
 from django.http import JsonResponse, response, HttpResponse
-from django.views.decorators.http import require_POST
+from django.views.decorators.http import require_POST, require_GET
 
 from bkoauth.jwt_client import JWTClient
-from common.mymako import render_mako_context
+from bkoauth.utils import transform_uin
+from common.context_processors import mysetting
+from common.mymako import render_mako_context, render_json
 from bkoauth.client import oauth_client
 import logging
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt【装饰器引入from account.decorators import login_exempt】
@@ -35,6 +37,46 @@ def contact(request):
 
 
 """
+@api {get} /user
+@apiName 获取用户信息
+@apiGroup all user
+@apiSuccessExample {json} Success-Response:
+    {
+        "result": "John",
+        "message": {
+            'nick': 用户昵称,
+            'avatar': 用户头像,
+            'permission': [
+                'admin',
+                'head',
+                'apply'
+            ]
+        }
+    }
+"""
+
+
+@require_GET
+def user_info(request):
+    uin = request.COOKIES.get('uin', '')
+    user_qq = transform_uin(uin)
+    user = request.user
+    permission = ['apply']
+    if user.is_admin():
+        permission.append('admin')
+    if user.is_head(user_qq):
+        permission.append('head')
+
+    setting = mysetting(request)
+    data = {
+        'nick': setting['NICK'],
+        'avatar': setting['AVATAR'],
+        'permission': permission
+    }
+    return render_json(data)
+
+
+"""
 @api {POST} /ogranization
 @apiName createOrganization
 @apiGroup superAdmin
@@ -59,7 +101,7 @@ def contact(request):
 
 @require_POST
 def create_organization(request):
-    if not request.user.is_superuser:
+    if not request.user.is_admin():
         return HttpResponse(status=401, content=u'无此权限')
     data = {}
     try:
@@ -99,7 +141,7 @@ def create_organization(request):
 """
 @require_POST
 def update_organiztion(request, organization_id):
-    if not request.user.is_superuser:
+    if not request.user.is_admin():
         return HttpResponse(status=401, content=u'无此权限')
 
     data = {}
@@ -127,7 +169,7 @@ def update_organiztion(request, organization_id):
 """
 @require_POST
 def del_organization(request, organization_id):
-    if not request.user.is_superuser:
+    if not request.user.is_admin():
         return HttpResponse(status=401, content=u'无此权限')
 
     organization = {}

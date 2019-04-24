@@ -5,7 +5,9 @@ from django.core import validators
 from django.utils import timezone
 from django.utils.translation import ugettext_lazy as _
 from django.core.mail import send_mail
-from django.contrib.auth.models import (AbstractBaseUser, PermissionsMixin, BaseUserManager)
+from django.contrib.auth.models import (
+    AbstractBaseUser, PermissionsMixin, BaseUserManager)
+
 
 
 class BkUserManager(BaseUserManager):
@@ -45,14 +47,21 @@ class BkUser(AbstractBaseUser, PermissionsMixin):
 
     username and password are required. Other fields are optional.
     """
-    username = models.CharField(_('username'), max_length=128, unique=True,
-        help_text=_('Required. 128 characters or fewer. Letters, digits and '
-                    '@/./+/-/_ only.'),
+    username = models.CharField(
+        _('username'),
+        max_length=128,
+        unique=True,
+        help_text=_(
+            'Required. 128 characters or fewer. Letters, digits and '
+            '@/./+/-/_ only.'),
         validators=[
-            validators.RegexValidator(r'^[\w.@+-]+$',
-                                      _('Enter a valid username. '
-                                        'This value may contain only letters, numbers '
-                                        'and @/./+/-/_ characters.'), 'invalid'),
+            validators.RegexValidator(
+                r'^[\w.@+-]+$',
+                _(
+                    'Enter a valid username. '
+                    'This value may contain only letters, numbers '
+                    'and @/./+/-/_ characters.'),
+                'invalid'),
         ],
         error_messages={
             'unique': _("A user with that username already exists."),
@@ -60,15 +69,20 @@ class BkUser(AbstractBaseUser, PermissionsMixin):
     first_name = models.CharField(_('first name'), max_length=30, blank=True)
     last_name = models.CharField(_('last name'), max_length=30, blank=True)
     email = models.EmailField(_('email address'), blank=True)
-    is_staff = models.BooleanField(_('staff status'), default=False,
-        help_text=_('Designates whether the user can log into this admin '
-                    'site.'))
-    is_active = models.BooleanField(_('active'), default=True,
-        help_text=_('Designates whether this user should be treated as '
-                    'active. Unselect this instead of deleting accounts.'))
+    is_staff = models.BooleanField(_('staff status'), default=False, help_text=_(
+        'Designates whether the user can log into this admin ' 'site.'))
+    is_active = models.BooleanField(
+        _('active'), default=True, help_text=_(
+            'Designates whether this user should be treated as '
+            'active. Unselect this instead of deleting accounts.'))
     date_joined = models.DateTimeField(_('date joined'), default=timezone.now)
-    auth_token = models.CharField(_('auth_token'), max_length=255, blank=True, default='')
-    expires_time = models.DateTimeField(_('expires_time'), blank=True, null=True)
+    auth_token = models.CharField(
+        _('auth_token'),
+        max_length=255,
+        blank=True,
+        default='')
+    expires_time = models.DateTimeField(
+        _('expires_time'), blank=True, null=True)
 
     objects = BkUserManager()
 
@@ -96,3 +110,20 @@ class BkUser(AbstractBaseUser, PermissionsMixin):
         Sends an email to this User.
         """
         send_mail(subject, message, from_email, [self.email], **kwargs)
+
+    def is_admin(self):
+        """
+        是否为管理员（秘书）
+        """
+        if self.is_superuser:
+            return True
+        return self.groups.filter(name='admin').exists()
+
+    def is_head(self, user_qq):
+        """
+        是否负责人
+        """
+        if self.is_superuser:
+            return True
+        return OrganizationsUser.objects.filter(
+            user=user_qq, type=u'0').exists()

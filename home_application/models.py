@@ -8,7 +8,6 @@ from django.utils import timezone
 from django.db import models, transaction
 from django.utils.translation import ugettext_lazy as _
 
-
 from account.models import BkUser
 
 
@@ -19,8 +18,8 @@ class OrganizationsManager(models.Manager):
     @transaction.atomic
     def create_organization(self, data, user):
         obj = self.create(name=data['name'], update_user=user)
-        OrganizationsUser.create_heads(data['head'], obj)
-        OrganizationsUser.create_eva_members(data['eva_member'], obj)
+        OrganizationsUser.create_heads(list(set(data['head'])), obj)
+        OrganizationsUser.create_eva_members(list(set(data['eva_member'])), obj)
         return obj
 
     @transaction.atomic
@@ -29,8 +28,8 @@ class OrganizationsManager(models.Manager):
         obj.save()
         OrganizationsUser.del_eva_members(obj)
         OrganizationsUser.del_heads(obj)
-        OrganizationsUser.create_heads(data['head'], obj)
-        OrganizationsUser.create_eva_members(data['eva_member'], obj)
+        OrganizationsUser.create_heads(list(set(data['head'])), obj)
+        OrganizationsUser.create_eva_members(list(set(data['eva_member'])), obj)
 
 
 
