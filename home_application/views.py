@@ -59,7 +59,7 @@ def contact(request):
 
 @require_POST
 def create_organization(request):
-    if not request.user.is_superuser():
+    if not request.user.is_superuser:
         return HttpResponse(status=401, content=u'无此权限')
     data = {}
     try:
@@ -99,7 +99,7 @@ def create_organization(request):
 """
 @require_POST
 def update_organiztion(request, organization_id):
-    if not request.user.is_superuser():
+    if not request.user.is_superuser:
         return HttpResponse(status=401, content=u'无此权限')
 
     data = {}
@@ -127,7 +127,7 @@ def update_organiztion(request, organization_id):
 """
 @require_POST
 def del_organization(request, organization_id):
-    if not request.user.is_superuser():
+    if not request.user.is_superuser:
         return HttpResponse(status=401, content=u'无此权限')
 
     organization = {}
