@@ -81,7 +81,7 @@ class Organizations(models.Model):
             'head': OrganizationsUser.get_heads(self),
             'eva_members': OrganizationsUser.get_eva_members(self),
             'update_user': 'admin' if self.update_user.is_superuser else self.update_user.get_full_name(),
-            'create_time': self.create_time}
+            'create_time': self.create_time.strftime("%Y-%m-%d %H:%M:%S")}
 
     @staticmethod
     def to_array(organizations):
@@ -94,7 +94,7 @@ class Organizations(models.Model):
                 'head': OrganizationsUser.get_heads(item),
                 'eva_members': OrganizationsUser.get_eva_members(item),
                 'update_user': 'admin' if item.update_user.is_superuser else item.update_user.get_full_name(),
-                'create_time': item.create_time
+                'create_time': item.create_time.strftime("%Y-%m-%d %H:%M:%S")
             })
         return data
 
@@ -138,7 +138,7 @@ class OrganizationsUser(models.Model):
         heads = cls.objects.filter(organization=organization, type=u'0').all()
         ret = []
         for item in heads:
-            ret.append(item.name)
+            ret.append(item.user)
 
         return ret
 
@@ -148,7 +148,7 @@ class OrganizationsUser(models.Model):
             organization=organization, type=u'1').all()
         ret = []
         for item in eva_members:
-            ret.append(item.name)
+            ret.append(item.user)
 
         return ret
 
@@ -183,6 +183,46 @@ class Awards(models.Model):
         self.soft_del = True
         self.save()
 
+    @property
+    def applys_count(self):
+        return MyApply.objects.filter(award=self).count()
+
+    @property
+    def apply_award_count(self):
+        return MyApply.objects.filter(award=self, state=u'4').count()
+
+    def to_json(self):
+        applys = Awards.get_award_applys(self)
+        heads = OrganizationsUser.get_heads(self.organiztion)
+        return {
+            'id': self.id,
+            'name': self.name,
+            'organization': self.organization.name,
+            'content': self.content,
+            'heads': heads,
+            'level': self.level,
+            'is_active': self.is_active,
+            'start_time': self.start_time.strftime("%Y-%m-%d %H:%M:%S"),
+            'end_time': self.end_time.strftime("%Y-%m-%d %H:%M:%S"),
+            'applys': applys
+        }
+
+    @staticmethod
+    def to_array(awards):
+        ret = []
+        for item in awards:
+            ret.append({
+                'id': item.id,
+                'name': item.name,
+                'organization': item.organization.name,
+                'level': item.level,
+                'is_active': item.is_active,
+                'start_time': item.start_time.strftime("%Y-%m-%d %H:%M:%S"),
+                'apply_count': item.applys_count,
+                'apply_award_count': item.apply_award_count
+            })
+        return ret
+
 
 class Attachment(models.Model):
     real_name = models.CharField(max_length=255, verbose_name='文件名称')
@@ -196,7 +236,11 @@ class MyApply(models.Model):
     award = models.ForeignKey(Awards, verbose_name='申请奖项')
     apply_info = models.CharField(max_length=255, verbose_name='申请人/团队')
     apply_des = models.TextField(verbose_name='事迹介绍')
-    attachment = models.ForeignKey(Attachment, verbose_name='附件')
+    attachment = models.ForeignKey(
+        Attachment,
+        verbose_name='附件',
+        blank=True,
+        default=-1)
 
     STATE_CHOICES = (
         (u'0', u'申报中'),
@@ -205,6 +249,7 @@ class MyApply(models.Model):
         (u'3', u'未获奖'),
         (u'4', u'已获奖'),
     )
+    user = models.ForeignKey(BkUser)
     state = models.CharField(max_length=1, choices=STATE_CHOICES, default='0')
     remark = models.TextField(blank=True, verbose_name='评语')
     apply_time = models.DateTimeField(auto_created=True)
@@ -216,3 +261,21 @@ class MyApply(models.Model):
     def delete(self, using=None):
         self.soft_del = True
         self.save()
+
+    @classmethod
+    def get_award_applys(cls, award):
+        ret = []
+        applys = cls.objects.filter(award=award).all()
+        for item in applys:
+            ret.append({
+                'name': item.apply_info,
+                'state': item.state,
+                'apply_time': item.apply_time.strftime("%Y-%m-%d %H:%M:%S"),
+                'apply_des': item.apply_des,
+                'attachment': item.attachment.id if item.attachment is not None else -1,
+                'remark': item.remark
+            })
+        return ret
+
+
+
