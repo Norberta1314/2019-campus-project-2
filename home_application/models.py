@@ -19,7 +19,8 @@ class OrganizationsManager(models.Manager):
     def create_organization(self, data, user):
         obj = self.create(name=data['name'], update_user=user)
         OrganizationsUser.create_heads(list(set(data['head'])), obj)
-        OrganizationsUser.create_eva_members(list(set(data['eva_member'])), obj)
+        OrganizationsUser.create_eva_members(
+            list(set(data['eva_member'])), obj)
         return obj
 
     @transaction.atomic
@@ -29,8 +30,8 @@ class OrganizationsManager(models.Manager):
         OrganizationsUser.del_eva_members(obj)
         OrganizationsUser.del_heads(obj)
         OrganizationsUser.create_heads(list(set(data['head'])), obj)
-        OrganizationsUser.create_eva_members(list(set(data['eva_member'])), obj)
-
+        OrganizationsUser.create_eva_members(
+            list(set(data['eva_member'])), obj)
 
 
 class Organizations(models.Model):
@@ -74,7 +75,28 @@ class Organizations(models.Model):
         pass
 
     def to_json(self):
-        pass
+        return {
+            'id': self.id,
+            'name': self.name,
+            'head': OrganizationsUser.get_heads(self),
+            'eva_members': OrganizationsUser.get_eva_members(self),
+            'update_user': 'admin' if self.update_user.is_superuser else self.update_user.get_full_name(),
+            'create_time': self.create_time}
+
+    @staticmethod
+    def to_array(organizations):
+        data = []
+
+        for item in organizations:
+            data.append({
+                'id': item.id,
+                'name': item.name,
+                'head': OrganizationsUser.get_heads(item),
+                'eva_members': OrganizationsUser.get_eva_members(item),
+                'update_user': 'admin' if item.update_user.is_superuser else item.update_user.get_full_name(),
+                'create_time': item.create_time
+            })
+        return data
 
 
 class OrganizationsUser(models.Model):
@@ -110,6 +132,25 @@ class OrganizationsUser(models.Model):
         for item in eva_members:
             obj = cls(user=item, organization=organ, type=u'1')
             obj.save()
+
+    @classmethod
+    def get_heads(cls, organization):
+        heads = cls.objects.filter(organization=organization, type=u'0').all()
+        ret = []
+        for item in heads:
+            ret.append(item.name)
+
+        return ret
+
+    @classmethod
+    def get_eva_members(cls, organization):
+        eva_members = cls.objects.filter(
+            organization=organization, type=u'1').all()
+        ret = []
+        for item in eva_members:
+            ret.append(item.name)
+
+        return ret
 
 
 class Awards(models.Model):

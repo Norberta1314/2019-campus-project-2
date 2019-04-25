@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 import json
 
+from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.http import JsonResponse, response, HttpResponse
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
 
@@ -125,12 +126,84 @@ def create_organization(request):
 
 @require_http_methods(["GET", "DELETE", "PUT"])
 def organization_get_put_delete(request, organization_id):
+    if  not request.user.is_admin():
+        return HttpResponse(status=401, content=u'无此权限')
     if request.method == "GET":
-        pass
+        return get_organization(request, organization_id)
     if request.method == "DELETE":
         return del_organization(request, organization_id)
     if request.method == "PUT":
         return update_organiztion(request, organization_id)
+
+
+"""
+@api {GEt} /organizations?page=?
+@apiDescription 查询组织
+@apiGroup admin
+
+@apiParam {String} page 第几页 不存在为第一页
+@apiSuccessExample {json} Success-Response:
+    {
+        "result": "John",
+        "message": {
+            'organizations': [{
+                id: 'xxx'
+                name: '蓝鲸'，
+                head: ['xxx', 'xxx'],
+                eva_member: ['xxxx','xxx'],
+                create_time: 'xxxx'
+            }]
+        }
+    }
+"""
+
+
+@require_GET
+def organizations(request):
+    if  not request.user.is_admin():
+        return HttpResponse(status=401, content=u'无此权限')
+    organization_all = Organizations.objects.all()
+    paginator = Paginator(organization_all, 10)
+    page = request.GET.get('page', 1)
+    try:
+        organizations = paginator.page(page)
+    except PageNotAnInteger:
+        organizations = paginator.page(1)
+    except EmptyPage:
+        organizations = paginator.page(paginator.num_pages)
+    return render_json({'organizations': Organizations.to_array(organizations)})
+
+
+
+"""
+@api {GEt} /organization/:id
+@apiDescription 查询组织
+@apiGroup admin
+
+@apiParam {String} id 组织id
+@apiSuccessExample {json} Success-Response:
+    {
+        "result": "John",
+        "message": {
+            id: 'xxx',
+            name: '蓝鲸'，
+            head: ['xxx', 'xxx'],
+            eva_member: ['xxxx','xxx'],
+            create_time: 'xxxx'
+        }
+    }
+"""
+
+def get_organization(request, organization_id):
+    if  not request.user.is_admin():
+        return HttpResponse(status=401, content=u'无此权限')
+    try:
+        organization = Organizations.objects.get(id=organization_id)
+    except Exception as e:
+        return HttpResponse(status=404)
+
+    return render_json(organization.to_json())
+
 
 
 """
@@ -157,9 +230,6 @@ def organization_get_put_delete(request, organization_id):
 
 
 def update_organiztion(request, organization_id):
-    if not request.user.is_admin():
-        return HttpResponse(status=401, content=u'无此权限')
-
     data = {}
     try:
         data = json.dumps(request.body)
@@ -186,9 +256,6 @@ def update_organiztion(request, organization_id):
 
 
 def del_organization(request, organization_id):
-    if not request.user.is_admin():
-        return HttpResponse(status=401, content=u'无此权限')
-
     organization = {}
     try:
         organization = Organizations.objects.get(id=organization_id)
