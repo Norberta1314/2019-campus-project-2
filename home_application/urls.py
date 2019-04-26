@@ -16,4 +16,6 @@ urlpatterns = patterns(
     (r'^award', 'create_award'),
     (r'^awards', 'awards'),
     (r'^award/([0-9]{1,})', AwardView.as_view()),
+    (r'^attachment$', 'upload_attachment'),
+
 )
