@@ -611,8 +611,8 @@ def awards_clone(request):
 
 """
 @api {GET} /my/applys/?page=?
-@apiDescription 查询组织
-@apiGroup admin
+@apiDescription 我的申请list
+@apiGroup apply
 
 @apiParam {Number} page 第几页 无 默认第一页
 @apiSuccessExample {json} Success-Response:
@@ -1031,4 +1031,77 @@ def decide_award(request, apply_id):
 
 """
 我的审核api {end}
+"""
+
+
+"""
+首页api {start}
+"""
+
+
+"""
+@api {GET} /index/applys
+@apiDescription 首页可以申请list
+@apiGroup apply
+
+@apiSuccessExample {json} Success-Response:
+    {
+        "counts": "15",
+        "awards":  [
+        {
+            award_id: 'xx',
+            organization: 'xxx',
+            apply_award: 'xxx',
+            award_state: 'xxx',
+            state: 'xxx',
+            count: 'xxx'
+        }
+        ]
+    }
+"""
+def can_apply_list(request):
+    uin = request.COOKIES.get('uin', '')
+    user_qq = transform_uin(uin)
+    user = request.user
+    can_applys =  user.get_my_not_apply(user_qq)
+    return render_json(can_applys)
+
+
+
+"""
+@api {GET} /index/last
+@apiDescription 历史获奖
+@apiGroup apply
+
+@apiSuccessExample {json} Success-Response:
+    {
+        "counts": "15",
+        "awards":  [
+        {
+            award_id: 'xx',
+            organization: 'xxx',
+            apply_award: 'xxx',
+            award_state: 'xxx',
+            state: 'xxx',
+            count: 'xxx'
+        }
+        ]
+    }
+"""
+
+
+def last_award_list(request):
+    user = request.user
+    last_awards = MyApply.objects.filter(user=user, state=u'4').order_by('apply_time').all()
+    ret = []
+    for item in last_awards:
+        ret.append(item.to_json())
+
+    return render_json(ret)
+
+
+
+
+"""
+首页api {end}
 """

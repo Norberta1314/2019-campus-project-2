@@ -158,6 +158,7 @@ class BkUser(AbstractBaseUser, PermissionsMixin):
                 'apply_award': item.name,
                 'award_state': item.state,
                 'state': -1,
+                'count': MyApply.objects.filter(award=item).count()
             })
         return ret
 
