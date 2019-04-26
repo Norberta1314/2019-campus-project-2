@@ -9,7 +9,6 @@ from django.contrib.auth.models import (
     AbstractBaseUser, PermissionsMixin, BaseUserManager)
 
 
-
 class BkUserManager(BaseUserManager):
     """BK user manager."""
 
@@ -128,9 +127,20 @@ class BkUser(AbstractBaseUser, PermissionsMixin):
         return OrganizationsUser.objects.filter(
             user=user_qq, type=u'0').exists()
 
+    def is_organ_head(self, user_qq, organ):
+        """
+        是否该组织head
+        :param user_qq:
+        :return:
+        """
+        if self.is_superuser:
+            return True
+        return OrganizationsUser.objects.filter(
+            user=user_qq, type=u'0', organization=organ).exists()
 
     def get_my_not_apply(self, user_qq):
-        organs = OrganizationsUser.objects.filter(user=user_qq, type=u'0').all()
+        organs = OrganizationsUser.objects.filter(
+            user=user_qq, type=u'1').all()
         awards = []
         for item in organs:
             temp = Awards.objects.filter(organiztion=item).all()
@@ -151,10 +161,9 @@ class BkUser(AbstractBaseUser, PermissionsMixin):
             })
         return ret
 
-
-
     def get_my_apply(self, user_qq):
-        organs = OrganizationsUser.objects.filter(user=user_qq, type=u'0').all()
+        organs = OrganizationsUser.objects.filter(
+            user=user_qq, type=u'1').all()
         awards = []
         for item in organs:
             temp = Awards.objects.filter(organiztion=item).all()
@@ -175,3 +184,29 @@ class BkUser(AbstractBaseUser, PermissionsMixin):
                 'apply_time': item.apply_time.strftime("%Y-%m-%d %H:%M:%S"),
             })
         return ret
+
+
+    def get_my_check(self, user_qq):
+        organs = OrganizationsUser.objects.filter(user=user_qq, type=u'0').all()
+        awards = []
+        for item in organs:
+            temp = Awards.objects.filter(organiztion=item).all()
+            for item_t in temp:
+                awards.append(item_t.id)
+
+        applys = MyApply.objects.filter(award_id__in=awards).all()
+        ret = []
+        for item in applys:
+            ret.append({
+                'apply_id': item.id,
+                'apply_info': item.apply_info,
+                'award_id': item.award.id,
+                'organization': item.award.organization.name,
+                'apply_award': item.award.name,
+                'award_state': item.award.state,
+                'state': item.state,
+                'apply_time': item.apply_time.strftime("%Y-%m-%d %H:%M:%S"),
+                'op_user': user_qq if self.get_full_name() is '' else self.get_full_name()
+            })
+
+

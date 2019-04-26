@@ -289,6 +289,29 @@ class MyApply(models.Model):
         return ret
 
 
+    def reject(self):
+        if  self.state == u'0':
+            self.state = u'1'
+            self.save()
+        else:
+            raise Exception(u'不能操作')
+
+    def pass_check(self):
+        if  self.state == u'0':
+            self.state = u'2'
+            self.save()
+        else:
+            raise Exception(u'不能操作')
+
+    def decide_award(self, data):
+        if self.state == u'2':
+            self.remark = data['remark']
+            self.state = data['state']
+            self.save()
+        else:
+            raise Exception(u'无法操作')
+
+
     def to_json(self):
         award = self.award.to_json()
         del award['applys']
