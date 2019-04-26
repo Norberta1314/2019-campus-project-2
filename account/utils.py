@@ -36,3 +36,5 @@ def is_url_in_domain(url):
     except Exception, e:
         logger.error(u"获取url的域名出错:%s, url:%s" % (e, url))
     return False
+
+

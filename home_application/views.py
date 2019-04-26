@@ -20,9 +20,9 @@ from bkoauth.client import oauth_client
 import logging
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt【装饰器引入from account.decorators import login_exempt】
 from common.utils import html_escape
-from home_application.decorators import require_admin
+from home_application.decorators import require_admin, require_head
 from home_application.models import Organizations, Awards, Attachment, MyApply
-from home_application.utils import valid_organization, valid_award, valid_apply
+from home_application.utils import valid_organization, valid_award, valid_apply, valid_decide
 
 
 def home(request):
@@ -195,7 +195,8 @@ def organizations(request):
         organizations = paginator.page(1)
     except EmptyPage:
         organizations = paginator.page(paginator.num_pages)
-    return render_json({'counts': paginator.count, 'organizations': Organizations.to_array(organizations)})
+    return render_json({'counts': paginator.count,
+                        'organizations': Organizations.to_array(organizations)})
 
 
 """
@@ -528,7 +529,7 @@ def del_award(request, award_id):
 def get_award_organizations(request):
     try:
         organizations = Organizations.objects.all()
-    except:
+    except BaseException:
         return HttpResponse(status=404)
     ret = []
     for item in organizations:
@@ -639,7 +640,6 @@ def awards_clone(request):
 """
 
 
-
 @require_GET
 def my_applys(request):
     """
@@ -661,8 +661,7 @@ def my_applys(request):
         my_applys = paginator.page(1)
     except EmptyPage:
         my_applys = paginator.page(paginator.count)
-    return render_json(
-        Awards.to_array({'counts': paginator.count, 'my_applys': my_applys}))
+    return render_json({'counts': paginator.count, 'my_applys': my_applys})
 
 
 """
@@ -672,7 +671,7 @@ def my_applys(request):
 
 @apiParam {Number} id 申请的奖项id
 @apiParam {String}  apply_info 申报人/团队 需要xss过滤
-@apiParam {String}  content 事迹介绍 
+@apiParam {String}  content 事迹介绍
 @apiParam {Number}  attachment_id 附件id 无就-1
 
 
@@ -686,6 +685,7 @@ def my_applys(request):
     }
 """
 
+
 def apply_award(request, award_id):
     data = {}
     try:
@@ -695,15 +695,15 @@ def apply_award(request, award_id):
     except Exception as e:
         return HttpResponse(status=422, content=u'%s' % e.message)
     try:
-        MyApply.objects.create(apply_info=data['apply_info'], apply_des=data['apply_info'], attachment_id=data['attachment_id'], award_id=award_id)
+        MyApply.objects.create(
+            apply_info=data['apply_info'],
+            apply_des=data['apply_info'],
+            attachment_id=data['attachment_id'],
+            award_id=award_id)
     except Exception as e:
         return HttpResponse(status=400, content=u'%s' % e)
 
     return HttpResponse(status=201)
-
-
-
-
 
 
 """
@@ -713,7 +713,7 @@ def apply_award(request, award_id):
 @apiParam {File} file 上传的文件
 @apiGroup apply
 
-    
+
 @apiSuccessExample {json} Success-Response:
     {
     "url": "http://pqg00vuko.bkt.clouddn.com/None/%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A1%A8%E5%8D%95.png",
@@ -724,18 +724,22 @@ def apply_award(request, award_id):
 
 
 def upload_attachment(request):
-    #限制上传附件小于 20M
+    # 限制上传附件小于 20M
     if request.FILES['file'].size >= 20971520:
         return HttpResponse(status=413, content=u'请求文件过大')
     storage = DefaultStorage()
     real_name = request.FILES['file'].name
-    name =  storage.save('/%s/%s' % (request.user.id, request.FILES['file'].name), request.FILES['file'])
+    name = storage.save(
+        '/%s/%s' %
+        (request.user.id,
+         request.FILES['file'].name),
+        request.FILES['file'])
     try:
         attachment = Attachment.objects.create(real_name=real_name, path=name)
-    except:
+    except BaseException:
         return HttpResponse(status=201)
 
-    url =  storage.url(name)
+    url = storage.url(name)
     ret = {
         'url': url,
         'attachment_name': real_name,
@@ -766,6 +770,7 @@ def upload_attachment(request):
     }
 """
 
+
 def get_apply_award(request, award_id):
     try:
         award = Awards.objects.get(id=award_id)
@@ -776,8 +781,6 @@ def get_apply_award(request, award_id):
     return render_json(ret)
 
 
-
-
 """
 @api {PUT} /my/apply/:id
 @apiDescription 更新我的申请 兼容重新申请
@@ -785,7 +788,7 @@ def get_apply_award(request, award_id):
 
 @apiParam {Number} id 申请id
 @apiParam {String}  apply_info 申报人/团队 需要xss过滤
-@apiParam {String}  content 事迹介绍 
+@apiParam {String}  content 事迹介绍
 @apiParam {Number}  attachment_id 附件id 无就-1
 
 
@@ -812,14 +815,20 @@ def update_myapply(request, myapply_id):
         myapply = MyApply.objects.get(id=myapply_id)
         if data['is_reapply']:
             if myapply.state == '1':
-                myapply.objects.update(apply_info=data['apply_info'], apply_des=data['apply_info'], attachment_id=data['attachment_id'], state=u'0')
+                myapply.objects.update(
+                    apply_info=data['apply_info'],
+                    apply_des=data['apply_info'],
+                    attachment_id=data['attachment_id'],
+                    state=u'0')
         else:
-            myapply.objects.update(apply_info=data['apply_info'], apply_des=data['apply_info'], attachment_id=data['attachment_id'])
+            myapply.objects.update(
+                apply_info=data['apply_info'],
+                apply_des=data['apply_info'],
+                attachment_id=data['attachment_id'])
     except Exception as e:
         return HttpResponse(status=400, content=u'%s' % e)
 
     return HttpResponse(status=201)
-
 
 
 """
@@ -853,8 +862,8 @@ def update_myapply(request, myapply_id):
             "attachment_id": 1
          },
     }
-   
-   } 
+
+   }
 
 """
 
@@ -867,19 +876,159 @@ def get_myapply(request, myapply_id):
     return render_json(myapply.to_json())
 
 
+"""
+我的申请api {end}
+"""
+
+
+"""
+我的审核api {start}
+"""
+
+
+"""
+@api {GET} /my/checks?page=?
+@apiDescription 查询我的审核
+@apiGroup head
+
+@apiParam {Number} page 第几页 无 默认第一页
+@apiSuccessExample {json} Success-Response:
+    {
+        "counts": "15",
+        "awards":  [{
+            apply_id: 'xxx'
+            apply_info: '季度之星'
+            award_id: '12'，
+            award_name: 'xxxx'，
+            organization: 'xxxx'，
+            apply_award: 'xxx'，
+            award_state: True or False，
+            state: '0' 0 申报中 1 未通过 2 已通过 3未获奖 4 已获奖
+            apply_time: '2014-12-31 18:20:1'，
+            op_user: 'xxxxx'
+        }]
+    }
+"""
+
+@require_head
+def get_check_list(request):
+    uin = request.COOKIES.get('uin', '')
+    user_qq = transform_uin(uin)
+    user = request.user
+    check_list = user.get_my_check(user_qq)
+    paginator = Paginator(check_list, 10)
+    page = request.GET.get('page', 1)
+    try:
+        my_checks = paginator.page(page)
+    except PageNotAnInteger:
+        my_checks = paginator.page(1)
+    except EmptyPage:
+        my_checks = paginator.page(paginator.count)
+    return render_json({'counts': paginator.count, 'my_checks': my_checks})
 
 
 
 
+"""
+@api {PUT} /my/check/reject/:apply_id
+@apiDescription 驳回申请
+@apiGroup head
+
+@apiParam {Number} id 申请id
+
+
+"""
+
+@require_head
+def reject(request, apply_id):
+    try:
+        apply = MyApply.objects.get(id=apply_id)
+    except Exception as e:
+        return HttpResponse(status=404)
+
+    uin = request.COOKIES.get('uin', '')
+    user_qq = transform_uin(uin)
+    user = request.user
+    if not user.is_organ_head(user_qq, apply.award.organiztion):
+        return HttpResponse(status=401)
+    try:
+        apply.reject()
+    except:
+        return HttpResponse(status=403)
+    return HttpResponse(status=201)
+
+
+"""
+@api {PUT} /my/check/pass/:apply_id
+@apiDescription 驳回申请
+@apiGroup head
+
+@apiParam {Number} id 申请id
+"""
+
+def pass_check(request, apply_id):
+    try:
+        apply = MyApply.objects.get(id=apply_id)
+    except Exception as e:
+        return HttpResponse(status=404)
+
+    uin = request.COOKIES.get('uin', '')
+    user_qq = transform_uin(uin)
+    user = request.user
+    if not user.is_organ_head(user_qq, apply.award.organiztion):
+        return HttpResponse(status=401)
+    try:
+        apply.pass_check()
+    except:
+        return HttpResponse(status=403)
+    return HttpResponse(status=201)
 
 
 
+"""
+@api {PUT} /my/check/award/:apply_id
+@apiDescription 评奖
+@apiGroup head
 
+@apiParam {Number} id 申请id
+@apiParamExample {json} Request-Example:
+    {
+        remark: '评语'
+        state: "3/4" 3 未获奖 4 未获奖
+    }
+"""
+
+@require_head
+def decide_award(request, apply_id):
+    try:
+        apply = MyApply.objects.get(id=apply_id)
+    except Exception as e:
+        return HttpResponse(status=404)
+
+    uin = request.COOKIES.get('uin', '')
+    user_qq = transform_uin(uin)
+    user = request.user
+    if not user.is_organ_head(user_qq, apply.award.organiztion):
+        return HttpResponse(status=401)
+
+    try:
+        json = html_escape(request.body, is_json=True)
+        data = json.loads(json)
+        valid_decide(data)
+    except Exception as e:
+        return HttpResponse(status=422, content=u'%s' % e.message)
+
+    try:
+        apply.decide_award(data)
+    except:
+        return HttpResponse(status=403)
+
+    return HttpResponse(status=201)
 
 
 
 
 
 """
-我的申请api {end}
+我的审核api {end}
 """

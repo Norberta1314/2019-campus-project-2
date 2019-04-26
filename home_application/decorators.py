@@ -4,6 +4,8 @@ from functools import wraps
 from django.http import HttpResponse
 from django.utils.decorators import available_attrs
 
+from bkoauth.utils import transform_uin
+
 
 def require_admin(func):
     """
@@ -21,13 +23,14 @@ def require_admin(func):
 
 def require_head(func):
     """
-    todo : 待完成
     验证是否负责人
     :return:
     """
     @wraps(func, assigned=available_attrs(func))
     def inner(request, *args, **kwargs):
-        if not request.user.is_admin():
+        uin = request.COOKIES.get('uin', '')
+        user_qq = transform_uin(uin)
+        if not request.user.is_head(user_qq):
             return HttpResponse(status=401, content=u'无此权限')
         return func(request, *args, **kwargs)
     return inner
