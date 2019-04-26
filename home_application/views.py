@@ -1,12 +1,17 @@
 # -*- coding: utf-8 -*-
+from __future__ import unicode_literals
+
 import json
 
+from django.core.files.storage import DefaultStorage
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db import transaction
 from django.http import JsonResponse, response, HttpResponse
+from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
 from django.views.generic import View
 
+from account.decorators import login_exempt
 from bkoauth.jwt_client import JWTClient
 from bkoauth.utils import transform_uin
 from common.context_processors import mysetting
@@ -16,7 +21,7 @@ import logging
 # 开发框架中通过中间件默认是需要登录态的，如有不需要登录的，可添加装饰器login_exempt【装饰器引入from account.decorators import login_exempt】
 from common.utils import html_escape
 from home_application.decorators import require_admin
-from home_application.models import Organizations, Awards
+from home_application.models import Organizations, Awards, Attachment, MyApply
 from home_application.utils import valid_organization, valid_award, valid_apply
 
 
@@ -662,17 +667,14 @@ def my_applys(request):
 
 """
 @api {POST} /my/apply/:id
-@apiDescription 创建一个奖项
+@apiDescription 申请一个奖项
 @apiGroup admin
 
 @apiParam {Number} id 申请的奖项id
-@apiParam {Array}  content 评价条件 需要xss过滤
-@apiParam {String}  level 奖项级别 0: 中心级 1：部门级 2：小组级 4：公司级
-@apiParam {Number}  organization 所属组织id
-@apiParam {String}  start_time 开始时间
-@apiParam {String}  end_time 结束时间
-@apiParam {Bool}  have_attachment 是否允许附件
-@apiParam {Bool}  is_active 是否生效
+@apiParam {String}  apply_info 申报人/团队 需要xss过滤
+@apiParam {String}  content 事迹介绍 
+@apiParam {Number}  attachment_id 附件id 无就-1
+
 
 @apiGroup admin
 
@@ -693,7 +695,7 @@ def apply_award(request, award_id):
     except Exception as e:
         return HttpResponse(status=422, content=u'%s' % e.message)
     try:
-        Awards.objects.create(apply_info=data['apply_info'], apply_des=data['apply_info'], attachment_id=data['attachment_id'], award_id=award_id)
+        MyApply.objects.create(apply_info=data['apply_info'], apply_des=data['apply_info'], attachment_id=data['attachment_id'], award_id=award_id)
     except Exception as e:
         return HttpResponse(status=400, content=u'%s' % e)
 
@@ -705,32 +707,174 @@ def apply_award(request, award_id):
 
 
 """
-@api {POST} /my/apply/:id
-@apiDescription 创建一个奖项
-@apiGroup admin
+@api {POST} /attachenment
+@apiDescription 上传附件
 
-@apiParam {Number} id 申请的奖项id
-@apiParam {Array}  content 评价条件 需要xss过滤
-@apiParam {String}  level 奖项级别 0: 中心级 1：部门级 2：小组级 4：公司级
-@apiParam {Number}  organization 所属组织id
-@apiParam {String}  start_time 开始时间
-@apiParam {String}  end_time 结束时间
-@apiParam {Bool}  have_attachment 是否允许附件
-@apiParam {Bool}  is_active 是否生效
+@apiParam {File} file 上传的文件
+@apiGroup apply
 
-@apiGroup admin
-
-@apiParamExample {json} Request-Example:
+    
+@apiSuccessExample {json} Success-Response:
     {
-        apply_info: "申报人/团队", 非法字符校验
-        content: "事迹介绍", // xss 过滤 非法字符校验
-        attachment_id: "233",
+    "url": "http://pqg00vuko.bkt.clouddn.com/None/%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A1%A8%E5%8D%95.png",
+    "attachment_name": "未命名表单.png",
+    "attachment_id": 1
     }
 """
 
-def upload_attachment():
 
-    pass
+def upload_attachment(request):
+    #限制上传附件小于 20M
+    if request.FILES['file'].size >= 20971520:
+        return HttpResponse(status=413, content=u'请求文件过大')
+    storage = DefaultStorage()
+    real_name = request.FILES['file'].name
+    name =  storage.save('/%s/%s' % (request.user.id, request.FILES['file'].name), request.FILES['file'])
+    try:
+        attachment = Attachment.objects.create(real_name=real_name, path=name)
+    except:
+        return HttpResponse(status=201)
+
+    url =  storage.url(name)
+    ret = {
+        'url': url,
+        'attachment_name': real_name,
+        'attachment_id': attachment.id
+    }
+    return render_json(ret)
+
+
+"""
+@api {GET} /myapply/award/:id
+@apiDescription 申请查询奖项详细信息
+@apiGroup apply
+
+@apiParam {Number} id 奖项id
+@apiSuccessExample {json} Success-Response:
+    {
+        id: 'xxx'
+        name: '季度之星'
+        organization: '蓝鲸'，
+        content: 'xxxxxx'，
+        heads: ['xxx', 'xxxx']，
+        level: '0'，
+        is_active: True，
+        start_time: '2014-12-31 18:20:1'，
+        end_time: '2014-12-31 18:20:1'，
+        have_attachment: 'true，
+
+    }
+"""
+
+def get_apply_award(request, award_id):
+    try:
+        award = Awards.objects.get(id=award_id)
+    except Exception as e:
+        return HttpResponse(status=404)
+    ret = award.to_json()
+    del ret['applys']
+    return render_json(ret)
+
+
+
+
+"""
+@api {PUT} /my/apply/:id
+@apiDescription 更新我的申请 兼容重新申请
+@apiGroup apply
+
+@apiParam {Number} id 申请id
+@apiParam {String}  apply_info 申报人/团队 需要xss过滤
+@apiParam {String}  content 事迹介绍 
+@apiParam {Number}  attachment_id 附件id 无就-1
+
+
+@apiParamExample {json} Request-Example:
+    {
+        apply_id: 申请id
+        apply_info: "申报人/团队", 非法字符校验
+        content: "事迹介绍", // xss 过滤 非法字符校验
+        attachment_id: "233",
+        is_reapply: true
+    }
+"""
+
+
+def update_myapply(request, myapply_id):
+    data = {}
+    try:
+        json = html_escape(request.body, is_json=True)
+        data = json.loads(json)
+        valid_apply(data)
+    except Exception as e:
+        return HttpResponse(status=422, content=u'%s' % e.message)
+    try:
+        myapply = MyApply.objects.get(id=myapply_id)
+        if data['is_reapply']:
+            if myapply.state == '1':
+                myapply.objects.update(apply_info=data['apply_info'], apply_des=data['apply_info'], attachment_id=data['attachment_id'], state=u'0')
+        else:
+            myapply.objects.update(apply_info=data['apply_info'], apply_des=data['apply_info'], attachment_id=data['attachment_id'])
+    except Exception as e:
+        return HttpResponse(status=400, content=u'%s' % e)
+
+    return HttpResponse(status=201)
+
+
+
+"""
+@api {GET} /my/apply/:id
+@apiDescription 我的申请查询
+@apiGroup apply
+
+@apiParam {Number} id 我的申请id
+@apiSuccessExample {json} Success-Response:
+   {
+    award: {
+            id: 'xxx'
+            name: '季度之星'
+            organization: '蓝鲸'，
+            content: 'xxxxxx'，
+            heads: ['xxx', 'xxxx']，
+            level: '0'，
+            is_active: True，
+            start_time: '2014-12-31 18:20:1'，
+            end_time: '2014-12-31 18:20:1'，
+        },
+    myapply: {
+        apply_id: 申请id
+        apply_info: "申报人/团队", 非法字符校验
+        content: "事迹介绍", // xss 过滤 非法字符校验
+        state: '1',
+        remark: 'xxxx',
+        attachment:     {
+            "url": "http://pqg00vuko.bkt.clouddn.com/None/%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A1%A8%E5%8D%95.png",
+            "attachment_name": "未命名表单.png",
+            "attachment_id": 1
+         },
+    }
+   
+   } 
+
+"""
+
+
+def get_myapply(request, myapply_id):
+    try:
+        myapply = MyApply.objects.get(id=myapply_id)
+    except Exception as e:
+        return HttpResponse(status=404)
+    return render_json(myapply.to_json())
+
+
+
+
+
+
+
+
+
+
 
 
 

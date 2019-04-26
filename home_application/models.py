@@ -4,6 +4,7 @@
 
 
 # import from lib
+from django.core.files.storage import DefaultStorage
 from django.utils import timezone
 from django.db import models, transaction
 from django.utils.translation import ugettext_lazy as _
@@ -201,6 +202,7 @@ class Awards(models.Model):
             'content': self.content,
             'heads': heads,
             'level': self.level,
+            'have_attachment': self.have_attachment,
             'is_active': self.is_active,
             'start_time': self.start_time.strftime("%Y-%m-%d %H:%M:%S"),
             'end_time': self.end_time.strftime("%Y-%m-%d %H:%M:%S"),
@@ -230,6 +232,15 @@ class Attachment(models.Model):
 
     class Meta:
         db_table = 'attachment'
+
+    def to_json(self):
+        storage = DefaultStorage()
+        storage.open(self.path)
+        return {
+            'attachment_name': self.real_name,
+            'url': storage.url(),
+            'attachment_id': self.id
+        }
 
 
 class MyApply(models.Model):
@@ -276,6 +287,22 @@ class MyApply(models.Model):
                 'remark': item.remark
             })
         return ret
+
+
+    def to_json(self):
+        award = self.award.to_json()
+        del award['applys']
+        return {
+            'myapply': {
+                'apply_info': self.apply_info,
+                'attachment': self.attachment.to_json(),
+                'apply_des': self.apply_des,
+                'state': self.state,
+                'remark': self.remark
+
+            },
+            'award': award
+        }
 
 
 
