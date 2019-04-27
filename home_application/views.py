@@ -22,7 +22,8 @@ import logging
 from common.utils import html_escape
 from home_application.decorators import require_admin, require_head
 from home_application.models import Organizations, Awards, Attachment, MyApply
-from home_application.utils import valid_organization, valid_award, valid_apply, valid_decide
+from home_application.utils import valid_organization, valid_award, valid_apply, valid_decide, is_organ_head, \
+    get_my_apply, get_my_not_apply, get_my_check
 
 
 def home(request):
@@ -134,19 +135,22 @@ def create_organization(request):
 分发 get delete put请求
 """
 
+class AdminRequire(object):
+    @classmethod
+    def as_view(cls, **initkwargs):
+        view = super(AdminRequire, cls).as_view(**initkwargs)
+        return require_admin(view)
 
-class OrganizationView(View):
+
+class OrganizationView(AdminRequire,View):
     http_method_names = ['get', 'delete', 'put']
 
-    @require_admin
     def get(self, request, organization_id):
         return get_organization(request, organization_id)
 
-    @require_admin
     def delete(self, request, organization_id):
         return del_organization(request, organization_id)
 
-    @require_admin
     def put(self, request, organization_id):
         return update_organiztion(request, organization_id)
 
@@ -186,7 +190,7 @@ def organization_get_put_delete(request, organization_id):
 @require_admin
 @require_GET
 def organizations(request):
-    organization_all = Organizations.objects.all()
+    organization_all = Organizations.objects.filter(soft_del=False).all()
     paginator = Paginator(organization_all, 10)
     page = request.GET.get('page', 1)
     try:
@@ -219,7 +223,7 @@ def organizations(request):
 
 def get_organization(request, organization_id):
     try:
-        organization = Organizations.objects.get(id=organization_id)
+        organization = Organizations.objects.filter(soft_del=False).get(id=organization_id)
     except Exception as e:
         return HttpResponse(status=404)
 
@@ -259,7 +263,7 @@ def update_organiztion(request, organization_id):
 
     organization = {}
     try:
-        organization = Organizations.objects.get(id=organization_id)
+        organization = Organizations.objects.filter(soft_del=False).get(id=organization_id)
         Organizations.objects.update_organization(
             organization, data, request.user)
     except Exception as e:
@@ -278,7 +282,7 @@ def update_organiztion(request, organization_id):
 def del_organization(request, organization_id):
     organization = {}
     try:
-        organization = Organizations.objects.get(id=organization_id)
+        organization = Organizations.objects.filter(soft_del=False).get(id=organization_id)
         organization.delete()
     except Exception as e:
         return HttpResponse(status=410)
@@ -304,7 +308,7 @@ def del_organization(request, organization_id):
 @apiParam {String} name 奖项名称 非法字符过滤
 @apiParam {String}  content 评价条件 需要xss过滤
 @apiParam {String}  level 奖项级别 0: 中心级 1：部门级 2：小组级 4：公司级
-@apiParam {Number}  organization 所属组织id
+@apiParam {Number}  organization_id 所属组织id
 @apiParam {String}  start_time 开始时间
 @apiParam {String}  end_time 结束时间
 @apiParam {Bool}  have_attachment 是否允许附件
@@ -317,7 +321,7 @@ def del_organization(request, organization_id):
         name: "蓝鲸",
         content: "xxxxxx", // 富文本
         level: "0",
-        organization: "23",
+        organization_id: "23",
         start_time: "2014-12-31 18:20:1",
         end_time: "2014-12-31 18:20:1",
         have_attachment: true,
@@ -337,7 +341,7 @@ def create_award(request):
         return HttpResponse(status=422, content=u'%s' % e.message)
 
     try:
-        Awards.objects.create(data)
+        Awards.objects.create(**data)
     except Exception as e:
         return HttpResponse(status=400, content=u'%s' % e)
 
@@ -349,18 +353,17 @@ def create_award(request):
 """
 
 
-class AwardView(View):
+
+class AwardView(AdminRequire, View):
     http_method_names = ['get', 'delete', 'put']
 
-    @require_admin
+
     def get(self, request, organization_id):
         return get_award(request, organization_id)
 
-    @require_admin
     def delete(self, request, organization_id):
         return del_award(request, organization_id)
 
-    @require_admin
     def put(self, request, organization_id):
         return update_award(request, organization_id)
 
@@ -391,7 +394,7 @@ class AwardView(View):
 @require_admin
 @require_GET
 def awards(request):
-    award_all = Awards.objects.all()
+    award_all = Awards.objects.filter(soft_del=False).all()
     paginator = Paginator(award_all, 10)
     page = request.GET.get('page', 1)
     try:
@@ -400,8 +403,7 @@ def awards(request):
         awards = paginator.page(1)
     except EmptyPage:
         awards = paginator.page(paginator.count)
-    return render_json(
-        Awards.to_array({'counts': paginator.count, 'awards': awards}))
+    return render_json({'counts': paginator.count, 'awards': Awards.to_array(awards)})
 
 
 """
@@ -435,7 +437,7 @@ def awards(request):
 
 def get_award(request, award_id):
     try:
-        award = Awards.objects.get(id=award_id)
+        award = Awards.objects.filter(soft_del=False).get(id=award_id)
     except Exception as e:
         return HttpResponse(status=404)
 
@@ -450,7 +452,7 @@ def get_award(request, award_id):
 @apiParam {String} name 奖项名称 非法字符过滤
 @apiParam {String}  content 评价条件 需要xss过滤
 @apiParam {String}  level 奖项级别 0: 中心级 1：部门级 2：小组级 4：公司级
-@apiParam {Number}  organization 所属组织id
+@apiParam {Number}  organization_id 所属组织id
 @apiParam {String}  start_time 开始时间
 @apiParam {String}  end_time 结束时间
 @apiParam {Bool}  have_attachment 是否允许附件
@@ -462,7 +464,7 @@ def get_award(request, award_id):
         name: "蓝鲸",
         content: "xxxxxx", // 富文本
         level: "0",
-        organization: "23",
+        organization_id: "23",
         start_time: "2014-12-31 18:20:1",
         end_time: "2014-12-31 18:20:1",
         have_attachment: true,
@@ -474,15 +476,14 @@ def get_award(request, award_id):
 def update_award(request, award_id):
     data = {}
     try:
-        data = json.dumps(request.body)
+        data = json.loads(request.body)
         valid_award(data)
     except Exception as e:
         return HttpResponse(status=422, content=u'%s' % e.message)
 
     award = {}
     try:
-        award = Awards.objects.get(id=award_id)
-        award.objects.update(data)
+        Awards.objects.filter(soft_del=False, id=award_id).update(**data)
     except Exception as e:
         return HttpResponse(status=400)
 
@@ -499,7 +500,7 @@ def update_award(request, award_id):
 def del_award(request, award_id):
     award = {}
     try:
-        award = Awards.objects.get(id=award_id)
+        award = Awards.objects.filter(soft_del=False).get(id=award_id)
         award.delete()
     except Exception as e:
         return HttpResponse(status=410)
@@ -528,7 +529,7 @@ def del_award(request, award_id):
 @require_GET
 def get_award_organizations(request):
     try:
-        organizations = Organizations.objects.all()
+        organizations = Organizations.objects.filter(soft_del=False).all()
     except BaseException:
         return HttpResponse(status=404)
     ret = []
@@ -592,7 +593,7 @@ def awards_clone(request):
 
     try:
         for item in data:
-            Awards.objects.create(item)
+            Awards.objects.create(**item)
     except Exception as e:
         return HttpResponse(status=400, content=u'%s' % e)
 
@@ -650,8 +651,8 @@ def my_applys(request):
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
     user = request.user
-    not_applys = user.get_my_not_apply(user_qq)
-    applys = user.get_my_apply(user_qq)
+    not_applys = get_my_not_apply(user,user_qq)
+    applys = get_my_apply(user,user_qq)
     applys.extend(not_applys)
     paginator = Paginator(applys, 10)
     page = request.GET.get('page', 1)
@@ -661,21 +662,21 @@ def my_applys(request):
         my_applys = paginator.page(1)
     except EmptyPage:
         my_applys = paginator.page(paginator.count)
-    return render_json({'counts': paginator.count, 'my_applys': my_applys})
+
+    return render_json({'counts': paginator.count, 'my_applys': my_applys.object_list})
 
 
 
-class MyApplyView(View):
+
+class MyApplyView(AdminRequire,View):
     http_method_names = ['get', 'put', 'post']
 
-    @require_admin
     def get(self, request, id):
         return get_myapply(request, id)
 
     def post(self, request, id):
         return apply_award(request, id)
 
-    @require_admin
     def put(self, request, id):
         return update_myapply(request, id)
 
@@ -686,7 +687,7 @@ class MyApplyView(View):
 
 @apiParam {Number} id 申请的奖项id
 @apiParam {String}  apply_info 申报人/团队 需要xss过滤
-@apiParam {String}  content 事迹介绍
+@apiParam {String}  apply_des 事迹介绍
 @apiParam {Number}  attachment_id 附件id 无就-1
 
 
@@ -695,7 +696,7 @@ class MyApplyView(View):
 @apiParamExample {json} Request-Example:
     {
         apply_info: "申报人/团队", 非法字符校验
-        content: "事迹介绍", // xss 过滤 非法字符校验
+        apply_des: "事迹介绍", // xss 过滤 非法字符校验
         attachment_id: "233",
     }
 """
@@ -704,17 +705,24 @@ class MyApplyView(View):
 def apply_award(request, award_id):
     data = {}
     try:
-        json = html_escape(request.body, is_json=True)
-        data = json.loads(json)
+        data = json.loads(request.body)
         valid_apply(data)
     except Exception as e:
         return HttpResponse(status=422, content=u'%s' % e.message)
     try:
-        MyApply.objects.create(
-            apply_info=data['apply_info'],
-            apply_des=data['apply_info'],
-            attachment_id=data['attachment_id'],
-            award_id=award_id)
+        if data['attachment_id'] == -1:
+            MyApply.objects.create(
+                apply_info=data['apply_info'],
+                apply_des=data['apply_des'],
+                award_id=award_id,
+                user=request.user)
+        else:
+            MyApply.objects.create(
+                apply_info=data['apply_info'],
+                apply_des=data['apply_des'],
+                attachment_id=data['attachment_id'],
+                award_id=award_id,
+                user=request.user)
     except Exception as e:
         return HttpResponse(status=400, content=u'%s' % e)
 
@@ -822,8 +830,9 @@ def get_apply_award(request, award_id):
 def update_myapply(request, myapply_id):
     data = {}
     try:
-        json = html_escape(request.body, is_json=True)
-        data = json.loads(json)
+        data = json.loads(request.body)
+        data = html_escape(data, is_json=True)
+
         valid_apply(data)
     except Exception as e:
         return HttpResponse(status=422, content=u'%s' % e.message)
@@ -831,16 +840,27 @@ def update_myapply(request, myapply_id):
         myapply = MyApply.objects.get(id=myapply_id)
         if data['is_reapply']:
             if myapply.state == '1':
-                myapply.objects.update(
-                    apply_info=data['apply_info'],
-                    apply_des=data['apply_info'],
-                    attachment_id=data['attachment_id'],
-                    state=u'0')
+                if data['attachment_id'] == -1:
+                    MyApply.objects.filter(id=myapply_id).update(
+                        apply_info=data['apply_info'],
+                        apply_des=data['apply_des'],
+                        state=u'0')
+                else:
+                    MyApply.objects.filter(id=myapply_id).update(
+                        apply_info=data['apply_info'],
+                        apply_des=data['apply_des'],
+                        attachment_id=data['attachment_id'],
+                        state=u'0')
         else:
-            myapply.objects.update(
-                apply_info=data['apply_info'],
-                apply_des=data['apply_info'],
-                attachment_id=data['attachment_id'])
+            if data['attachment_id'] == -1:
+                MyApply.objects.filter(id=myapply_id).update(
+                    apply_info=data['apply_info'],
+                    apply_des=data['apply_des'])
+            else:
+                MyApply.objects.filter(id=myapply_id).update(
+                    apply_info=data['apply_info'],
+                    apply_des=data['apply_des'],
+                    attachment_id=data['attachment_id'])
     except Exception as e:
         return HttpResponse(status=400, content=u'%s' % e)
 
@@ -931,7 +951,7 @@ def get_check_list(request):
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
     user = request.user
-    check_list = user.get_my_check(user_qq)
+    check_list = get_my_check(user,user_qq)
     paginator = Paginator(check_list, 10)
     page = request.GET.get('page', 1)
     try:
@@ -940,7 +960,7 @@ def get_check_list(request):
         my_checks = paginator.page(1)
     except EmptyPage:
         my_checks = paginator.page(paginator.count)
-    return render_json({'counts': paginator.count, 'my_checks': my_checks})
+    return render_json({'counts': paginator.count, 'my_checks': my_checks.object_list})
 
 
 
@@ -966,7 +986,7 @@ def reject(request, apply_id):
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
     user = request.user
-    if not user.is_organ_head(user_qq, apply.award.organiztion):
+    if not is_organ_head(user,user_qq, apply.award.organization):
         return HttpResponse(status=401)
     try:
         apply.reject()
@@ -977,7 +997,7 @@ def reject(request, apply_id):
 
 """
 @api {PUT} /my/check/pass/:apply_id
-@apiDescription 驳回申请
+@apiDescription 通过申请
 @apiGroup head
 
 @apiParam {Number} id 申请id
@@ -994,7 +1014,7 @@ def pass_check(request, apply_id):
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
     user = request.user
-    if not user.is_organ_head(user_qq, apply.award.organiztion):
+    if not is_organ_head(user,user_qq, apply.award.organization):
         return HttpResponse(status=401)
     try:
         apply.pass_check()
@@ -1028,7 +1048,7 @@ def decide_award(request, apply_id):
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
     user = request.user
-    if not user.is_organ_head(user_qq, apply.award.organiztion):
+    if not is_organ_head(user, user_qq, apply.award.organiztion):
         return HttpResponse(status=401)
 
     try:
@@ -1085,7 +1105,7 @@ def can_apply_list(request):
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
     user = request.user
-    can_applys =  user.get_my_not_apply(user_qq)
+    can_applys =  get_my_not_apply(user,user_qq)
     return render_json(can_applys)
 
 

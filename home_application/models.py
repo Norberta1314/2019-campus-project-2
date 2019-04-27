@@ -36,6 +36,7 @@ class OrganizationsManager(models.Manager):
 
 
 class Organizations(models.Model):
+
     name = models.CharField(max_length=255, verbose_name='所属组织', unique=True)
     """
         josn 序列化不好查询和删除 改为映射表
@@ -167,7 +168,7 @@ class Awards(models.Model):
         max_length=1,
         choices=LEVEL_CHOICES,
         verbose_name='奖项级别')
-    organiztion = models.ForeignKey(Organizations, verbose_name='所属组织')
+    organization = models.ForeignKey(Organizations, verbose_name='所属组织')
     start_time = models.DateTimeField(verbose_name='开始时间')
     end_time = models.DateTimeField(verbose_name='结束时间')
     have_attachment = models.BooleanField(default=False)
@@ -193,8 +194,8 @@ class Awards(models.Model):
         return MyApply.objects.filter(award=self, state=u'4').count()
 
     def to_json(self):
-        applys = Awards.get_award_applys(self)
-        heads = OrganizationsUser.get_heads(self.organiztion)
+        applys = MyApply.get_award_applys(self)
+        heads = OrganizationsUser.get_heads(self.organization)
         return {
             'id': self.id,
             'name': self.name,
@@ -244,15 +245,14 @@ class Attachment(models.Model):
 
 
 class MyApply(models.Model):
+
     award = models.ForeignKey(Awards, verbose_name='申请奖项')
     apply_info = models.CharField(max_length=255, verbose_name='申请人/团队')
     apply_des = models.TextField(verbose_name='事迹介绍')
     attachment = models.ForeignKey(
         Attachment,
         verbose_name='附件',
-        blank=True,
-        default=-1)
-
+        blank=True)
     STATE_CHOICES = (
         (u'0', u'申报中'),
         (u'1', u'未通过'),
@@ -263,7 +263,7 @@ class MyApply(models.Model):
     user = models.ForeignKey(BkUser)
     state = models.CharField(max_length=1, choices=STATE_CHOICES, default='0')
     remark = models.TextField(blank=True, verbose_name='评语')
-    apply_time = models.DateTimeField(auto_created=True)
+    apply_time = models.DateTimeField(auto_created=True, default=timezone.now)
     soft_del = models.BooleanField(default=False, verbose_name='软删除')
 
     class Meta:
@@ -283,7 +283,7 @@ class MyApply(models.Model):
                 'state': item.state,
                 'apply_time': item.apply_time.strftime("%Y-%m-%d %H:%M:%S"),
                 'apply_des': item.apply_des,
-                'attachment': item.attachment.id if item.attachment is not None else -1,
+                'attachment': item.attachment.id if hasattr(item, 'attachment') else -1,
                 'remark': item.remark
             })
         return ret
@@ -318,7 +318,7 @@ class MyApply(models.Model):
         return {
             'myapply': {
                 'apply_info': self.apply_info,
-                'attachment': self.attachment.to_json(),
+                'attachment': self.attachment.to_json() if hasattr(self, 'attachment') else -1,
                 'apply_des': self.apply_des,
                 'state': self.state,
                 'remark': self.remark
