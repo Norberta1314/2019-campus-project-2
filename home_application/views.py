@@ -302,7 +302,7 @@ def del_organization(request, organization_id):
 @apiGroup admin
 
 @apiParam {String} name 奖项名称 非法字符过滤
-@apiParam {Array}  content 评价条件 需要xss过滤
+@apiParam {String}  content 评价条件 需要xss过滤
 @apiParam {String}  level 奖项级别 0: 中心级 1：部门级 2：小组级 4：公司级
 @apiParam {Number}  organization 所属组织id
 @apiParam {String}  start_time 开始时间
@@ -448,7 +448,7 @@ def get_award(request, award_id):
 @apiGroup admin
 
 @apiParam {String} name 奖项名称 非法字符过滤
-@apiParam {Array}  content 评价条件 需要xss过滤
+@apiParam {String}  content 评价条件 需要xss过滤
 @apiParam {String}  level 奖项级别 0: 中心级 1：部门级 2：小组级 4：公司级
 @apiParam {Number}  organization 所属组织id
 @apiParam {String}  start_time 开始时间
@@ -610,7 +610,7 @@ def awards_clone(request):
 
 
 """
-@api {GET} /my/applys/?page=?
+@api {GET} /my/applys?page=?
 @apiDescription 我的申请list
 @apiGroup apply
 
@@ -664,6 +664,21 @@ def my_applys(request):
     return render_json({'counts': paginator.count, 'my_applys': my_applys})
 
 
+
+class MyApplyView(View):
+    http_method_names = ['get', 'put', 'post']
+
+    @require_admin
+    def get(self, request, id):
+        return get_myapply(request, id)
+
+    def post(self, request, id):
+        return apply_award(request, id)
+
+    @require_admin
+    def put(self, request, id):
+        return update_myapply(request, id)
+
 """
 @api {POST} /my/apply/:id
 @apiDescription 申请一个奖项
@@ -675,7 +690,7 @@ def my_applys(request):
 @apiParam {Number}  attachment_id 附件id 无就-1
 
 
-@apiGroup admin
+@apiGroup apply
 
 @apiParamExample {json} Request-Example:
     {
@@ -723,6 +738,7 @@ def apply_award(request, award_id):
 """
 
 
+@require_POST
 def upload_attachment(request):
     # 限制上传附件小于 20M
     if request.FILES['file'].size >= 20971520:
@@ -770,7 +786,7 @@ def upload_attachment(request):
     }
 """
 
-
+@require_GET
 def get_apply_award(request, award_id):
     try:
         award = Awards.objects.get(id=award_id)
@@ -939,6 +955,7 @@ def get_check_list(request):
 
 """
 
+@require_http_methods(['PUT'])
 @require_head
 def reject(request, apply_id):
     try:
@@ -966,6 +983,8 @@ def reject(request, apply_id):
 @apiParam {Number} id 申请id
 """
 
+@require_head
+@require_http_methods(['PUT'])
 def pass_check(request, apply_id):
     try:
         apply = MyApply.objects.get(id=apply_id)
@@ -998,6 +1017,7 @@ def pass_check(request, apply_id):
     }
 """
 
+@require_http_methods(['PUT'])
 @require_head
 def decide_award(request, apply_id):
     try:
@@ -1059,6 +1079,8 @@ def decide_award(request, apply_id):
         ]
     }
 """
+
+@require_GET
 def can_apply_list(request):
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
@@ -1090,13 +1112,13 @@ def can_apply_list(request):
 """
 
 
+@require_GET
 def last_award_list(request):
     user = request.user
     last_awards = MyApply.objects.filter(user=user, state=u'4').order_by('apply_time').all()
     ret = []
     for item in last_awards:
         ret.append(item.to_json())
-
     return render_json(ret)
 
 
