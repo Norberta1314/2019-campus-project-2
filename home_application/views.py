@@ -135,6 +135,7 @@ def create_organization(request):
 分发 get delete put请求
 """
 
+
 class AdminRequire(object):
     @classmethod
     def as_view(cls, **initkwargs):
@@ -142,7 +143,7 @@ class AdminRequire(object):
         return require_admin(view)
 
 
-class OrganizationView(AdminRequire,View):
+class OrganizationView(AdminRequire, View):
     http_method_names = ['get', 'delete', 'put']
 
     def get(self, request, organization_id):
@@ -223,7 +224,8 @@ def organizations(request):
 
 def get_organization(request, organization_id):
     try:
-        organization = Organizations.objects.filter(soft_del=False).get(id=organization_id)
+        organization = Organizations.objects.filter(
+            soft_del=False).get(id=organization_id)
     except Exception as e:
         return HttpResponse(status=404)
 
@@ -256,18 +258,19 @@ def get_organization(request, organization_id):
 def update_organiztion(request, organization_id):
     data = {}
     try:
-        data = json.dumps(request.body)
+        data = json.loads(request.body)
         valid_organization(data)
     except Exception as e:
         return HttpResponse(status=422, content=u'%s' % e.message)
 
     organization = {}
     try:
-        organization = Organizations.objects.filter(soft_del=False).get(id=organization_id)
+        organization = Organizations.objects.filter(
+            soft_del=False).get(id=organization_id)
         Organizations.objects.update_organization(
             organization, data, request.user)
     except Exception as e:
-        return HttpResponse(status=400)
+        return HttpResponse(status=400, content=u'%s' % e)
 
     return HttpResponse(status=201)
 
@@ -282,7 +285,8 @@ def update_organiztion(request, organization_id):
 def del_organization(request, organization_id):
     organization = {}
     try:
-        organization = Organizations.objects.filter(soft_del=False).get(id=organization_id)
+        organization = Organizations.objects.filter(
+            soft_del=False).get(id=organization_id)
         organization.delete()
     except Exception as e:
         return HttpResponse(status=410)
@@ -353,10 +357,8 @@ def create_award(request):
 """
 
 
-
 class AwardView(AdminRequire, View):
     http_method_names = ['get', 'delete', 'put']
-
 
     def get(self, request, organization_id):
         return get_award(request, organization_id)
@@ -403,7 +405,8 @@ def awards(request):
         awards = paginator.page(1)
     except EmptyPage:
         awards = paginator.page(paginator.count)
-    return render_json({'counts': paginator.count, 'awards': Awards.to_array(awards)})
+    return render_json(
+        {'counts': paginator.count, 'awards': Awards.to_array(awards)})
 
 
 """
@@ -651,8 +654,8 @@ def my_applys(request):
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
     user = request.user
-    not_applys = get_my_not_apply(user,user_qq)
-    applys = get_my_apply(user,user_qq)
+    not_applys = get_my_not_apply(user, user_qq)
+    applys = get_my_apply(user, user_qq)
     applys.extend(not_applys)
     paginator = Paginator(applys, 10)
     page = request.GET.get('page', 1)
@@ -663,12 +666,11 @@ def my_applys(request):
     except EmptyPage:
         my_applys = paginator.page(paginator.count)
 
-    return render_json({'counts': paginator.count, 'my_applys': my_applys.object_list})
+    return render_json(
+        {'counts': paginator.count, 'my_applys': my_applys.object_list})
 
 
-
-
-class MyApplyView(AdminRequire,View):
+class MyApplyView(AdminRequire, View):
     http_method_names = ['get', 'put', 'post']
 
     def get(self, request, id):
@@ -679,6 +681,7 @@ class MyApplyView(AdminRequire,View):
 
     def put(self, request, id):
         return update_myapply(request, id)
+
 
 """
 @api {POST} /my/apply/:id
@@ -793,6 +796,7 @@ def upload_attachment(request):
 
     }
 """
+
 
 @require_GET
 def get_apply_award(request, award_id):
@@ -946,12 +950,13 @@ def get_myapply(request, myapply_id):
     }
 """
 
+
 @require_head
 def get_check_list(request):
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
     user = request.user
-    check_list = get_my_check(user,user_qq)
+    check_list = get_my_check(user, user_qq)
     paginator = Paginator(check_list, 10)
     page = request.GET.get('page', 1)
     try:
@@ -960,9 +965,8 @@ def get_check_list(request):
         my_checks = paginator.page(1)
     except EmptyPage:
         my_checks = paginator.page(paginator.count)
-    return render_json({'counts': paginator.count, 'my_checks': my_checks.object_list})
-
-
+    return render_json(
+        {'counts': paginator.count, 'my_checks': my_checks.object_list})
 
 
 """
@@ -975,6 +979,7 @@ def get_check_list(request):
 
 """
 
+
 @require_http_methods(['PUT'])
 @require_head
 def reject(request, apply_id):
@@ -986,11 +991,11 @@ def reject(request, apply_id):
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
     user = request.user
-    if not is_organ_head(user,user_qq, apply.award.organization):
+    if not is_organ_head(user, user_qq, apply.award.organization):
         return HttpResponse(status=401)
     try:
         apply.reject()
-    except:
+    except BaseException:
         return HttpResponse(status=403)
     return HttpResponse(status=201)
 
@@ -1003,6 +1008,7 @@ def reject(request, apply_id):
 @apiParam {Number} id 申请id
 """
 
+
 @require_head
 @require_http_methods(['PUT'])
 def pass_check(request, apply_id):
@@ -1014,14 +1020,13 @@ def pass_check(request, apply_id):
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
     user = request.user
-    if not is_organ_head(user,user_qq, apply.award.organization):
+    if not is_organ_head(user, user_qq, apply.award.organization):
         return HttpResponse(status=401)
     try:
         apply.pass_check()
-    except:
+    except BaseException:
         return HttpResponse(status=403)
     return HttpResponse(status=201)
-
 
 
 """
@@ -1036,6 +1041,7 @@ def pass_check(request, apply_id):
         state: "3/4" 3 未获奖 4 未获奖
     }
 """
+
 
 @require_http_methods(['PUT'])
 @require_head
@@ -1060,13 +1066,10 @@ def decide_award(request, apply_id):
 
     try:
         apply.decide_award(data)
-    except:
+    except BaseException:
         return HttpResponse(status=403)
 
     return HttpResponse(status=201)
-
-
-
 
 
 """
@@ -1100,14 +1103,14 @@ def decide_award(request, apply_id):
     }
 """
 
+
 @require_GET
 def can_apply_list(request):
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
     user = request.user
-    can_applys =  get_my_not_apply(user,user_qq)
+    can_applys = get_my_not_apply(user, user_qq)
     return render_json(can_applys)
-
 
 
 """
@@ -1135,13 +1138,12 @@ def can_apply_list(request):
 @require_GET
 def last_award_list(request):
     user = request.user
-    last_awards = MyApply.objects.filter(user=user, state=u'4').order_by('apply_time').all()
+    last_awards = MyApply.objects.filter(
+        user=user, state=u'4').order_by('apply_time').all()
     ret = []
     for item in last_awards:
         ret.append(item.to_json())
     return render_json(ret)
-
-
 
 
 """

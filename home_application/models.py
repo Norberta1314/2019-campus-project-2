@@ -26,7 +26,7 @@ class OrganizationsManager(models.Manager):
 
     @transaction.atomic
     def update_organization(self, obj, data, user):
-        obj.name = obj['name']
+        obj.name = data['name']
         obj.save()
         OrganizationsUser.del_eva_members(obj)
         OrganizationsUser.del_heads(obj)
@@ -288,16 +288,15 @@ class MyApply(models.Model):
             })
         return ret
 
-
     def reject(self):
-        if  self.state == u'0':
+        if self.state == u'0':
             self.state = u'1'
             self.save()
         else:
             raise Exception(u'不能操作')
 
     def pass_check(self):
-        if  self.state == u'0':
+        if self.state == u'0':
             self.state = u'2'
             self.save()
         else:
@@ -311,21 +310,16 @@ class MyApply(models.Model):
         else:
             raise Exception(u'无法操作')
 
-
     def to_json(self):
         award = self.award.to_json()
         del award['applys']
         return {
             'myapply': {
                 'apply_info': self.apply_info,
-                'attachment': self.attachment.to_json() if hasattr(self, 'attachment') else -1,
+                'attachment': self.attachment.to_json() if hasattr(
+                    self,
+                    'attachment') else -1,
                 'apply_des': self.apply_des,
                 'state': self.state,
-                'remark': self.remark
-
-            },
-            'award': award
-        }
-
-
-
+                'remark': self.remark},
+            'award': award}
