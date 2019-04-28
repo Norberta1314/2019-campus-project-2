@@ -1,9 +1,11 @@
 # coding=utf-8
+import json
 import re
 
 from django import forms
 
 from common.pxfilter import XssHtml
+from common.utils import html_escape
 from home_application.models import MyApply, OrganizationsUser, Awards
 
 
@@ -19,6 +21,8 @@ def valid_organization(data):
 
     if len(data['head']) == 0 or len(data['eva_member']) == 0:
         raise Exception(u'负责人或评价人员不能为空')
+
+    data = json.loads(html_escape(json.dumps(data), is_json=True))
 
 
 def valid_award(data):
@@ -40,6 +44,7 @@ def valid_award(data):
     parser.feed(data['content'])
     parser.close()
     data['content'] = parser.getHtml()
+    data['name'] = html_escape(data['name'])
 
 
 def valid_apply(data):
@@ -47,15 +52,14 @@ def valid_apply(data):
         if v is '' or v is None:
             raise Exception(u'不能为空')
 
-
+    data = json.loads(html_escape(json.dumps(data), is_json=True))
 
 
 def valid_decide(data):
     for k, v in data.items():
         if v is '' or v is None:
             raise Exception(u'不能为空')
-
-
+    data = json.loads(html_escape(json.dumps(data), is_json=True))
 
 
 def is_head(self, user_qq):

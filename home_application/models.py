@@ -283,7 +283,7 @@ class MyApply(models.Model):
                 'state': item.state,
                 'apply_time': item.apply_time.strftime("%Y-%m-%d %H:%M:%S"),
                 'apply_des': item.apply_des,
-                'attachment': item.attachment.id if hasattr(item, 'attachment') else -1,
+                'attachment': item.attachment.to_json() if hasattr(item, 'attachment') else -1,
                 'remark': item.remark
             })
         return ret

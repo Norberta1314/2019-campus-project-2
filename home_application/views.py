@@ -23,7 +23,7 @@ from common.utils import html_escape
 from home_application.decorators import require_admin, require_head
 from home_application.models import Organizations, Awards, Attachment, MyApply
 from home_application.utils import valid_organization, valid_award, valid_apply, valid_decide, is_organ_head, \
-    get_my_apply, get_my_not_apply, get_my_check
+    get_my_apply, get_my_not_apply, get_my_check, is_head
 
 
 def home(request):
@@ -78,7 +78,7 @@ def user_info(request):
     permission = ['apply']
     if user.is_admin():
         permission.append('admin')
-    if user.is_head(user_qq):
+    if is_head(user, user_qq):
         permission.append('head')
 
     setting = mysetting(request)
@@ -121,12 +121,14 @@ def create_organization(request):
         data = json.loads(request.body)
         valid_organization(data)
     except Exception as e:
-        return HttpResponse(status=422, content=u'%s' % e.message)
+        logging.debug(u'%s' % e)
+        return HttpResponse(status=422)
 
     try:
         Organizations.objects.create_organization(data, request.user)
     except Exception as e:
-        return HttpResponse(status=400, content=u'%s' % e)
+        logging.debug(u'%s' % e)
+        return HttpResponse(status=400)
 
     return HttpResponse(status=201)
 
@@ -261,7 +263,8 @@ def update_organiztion(request, organization_id):
         data = json.loads(request.body)
         valid_organization(data)
     except Exception as e:
-        return HttpResponse(status=422, content=u'%s' % e.message)
+        logging.debug(u'%s' % e)
+        return HttpResponse(status=422)
 
     organization = {}
     try:
@@ -270,7 +273,9 @@ def update_organiztion(request, organization_id):
         Organizations.objects.update_organization(
             organization, data, request.user)
     except Exception as e:
-        return HttpResponse(status=400, content=u'%s' % e)
+        logging.debug(u'%s' % e)
+
+        return HttpResponse(status=400)
 
     return HttpResponse(status=201)
 
@@ -289,6 +294,7 @@ def del_organization(request, organization_id):
             soft_del=False).get(id=organization_id)
         organization.delete()
     except Exception as e:
+        logging.debug(u'%s' % e)
         return HttpResponse(status=410)
 
     return HttpResponse(status=204, content=u'删除成功')
@@ -342,12 +348,16 @@ def create_award(request):
         data = json.loads(request.body)
         valid_award(data)
     except Exception as e:
-        return HttpResponse(status=422, content=u'%s' % e.message)
+        logging.debug(u'%s' % e)
+
+        return HttpResponse(status=422)
 
     try:
         Awards.objects.create(**data)
     except Exception as e:
-        return HttpResponse(status=400, content=u'%s' % e)
+        logging.debug(u'%s' % e)
+
+        return HttpResponse(status=400)
 
     return HttpResponse(status=201)
 
@@ -431,7 +441,11 @@ def awards(request):
             state: '1',
             apply_des: 'xxxxx',
             apply_time: '2014-12-31 18:20:1'，
-            attachment: 'x',
+            attachment: {
+                "url": "http://pqg00vuko.bkt.clouddn.com/None/%E6%9C%AA%E5%91%BD%E5%90%8D%E8%A1%A8%E5%8D%95.png",
+                "attachment_name": "未命名表单.png",
+                "attachment_id": 1
+            },
             remark: 'xxxx'
         }]
     }
@@ -482,6 +496,7 @@ def update_award(request, award_id):
         data = json.loads(request.body)
         valid_award(data)
     except Exception as e:
+        logging.debug(u'%s' % e)
         return HttpResponse(status=422, content=u'%s' % e.message)
 
     award = {}
@@ -506,6 +521,7 @@ def del_award(request, award_id):
         award = Awards.objects.filter(soft_del=False).get(id=award_id)
         award.delete()
     except Exception as e:
+        logging.debug(u'%s' % e)
         return HttpResponse(status=410)
 
     return HttpResponse(status=204, content=u'删除成功')
@@ -592,13 +608,15 @@ def awards_clone(request):
         for item in data:
             valid_award(item)
     except Exception as e:
-        return HttpResponse(status=422, content=u'%s' % e.message)
+        logging.debug(u'%s' % e)
+        return HttpResponse(status=422)
 
     try:
         for item in data:
             Awards.objects.create(**item)
     except Exception as e:
-        return HttpResponse(status=400, content=u'%s' % e)
+        logging.debug(u'%s' % e)
+        return HttpResponse(status=400)
 
     return HttpResponse(status=201)
 
@@ -711,23 +729,23 @@ def apply_award(request, award_id):
         data = json.loads(request.body)
         valid_apply(data)
     except Exception as e:
+        logging.debug(u'%s' % e)
         return HttpResponse(status=422, content=u'%s' % e.message)
     try:
         if data['attachment_id'] == -1:
+            del data['attachment_id']
             MyApply.objects.create(
-                apply_info=data['apply_info'],
-                apply_des=data['apply_des'],
                 award_id=award_id,
-                user=request.user)
+                user=request.user,
+                **data)
         else:
             MyApply.objects.create(
-                apply_info=data['apply_info'],
-                apply_des=data['apply_des'],
-                attachment_id=data['attachment_id'],
                 award_id=award_id,
-                user=request.user)
+                user=request.user,
+                **data)
     except Exception as e:
-        return HttpResponse(status=400, content=u'%s' % e)
+        logging.debug(u'%s' % e)
+        return HttpResponse(status=400)
 
     return HttpResponse(status=201)
 
@@ -816,15 +834,14 @@ def get_apply_award(request, award_id):
 
 @apiParam {Number} id 申请id
 @apiParam {String}  apply_info 申报人/团队 需要xss过滤
-@apiParam {String}  content 事迹介绍
+@apiParam {String}  apply_des 事迹介绍
 @apiParam {Number}  attachment_id 附件id 无就-1
 
 
 @apiParamExample {json} Request-Example:
     {
-        apply_id: 申请id
         apply_info: "申报人/团队", 非法字符校验
-        content: "事迹介绍", // xss 过滤 非法字符校验
+        apply_des: "事迹介绍", // xss 过滤 非法字符校验
         attachment_id: "233",
         is_reapply: true
     }
@@ -835,36 +852,34 @@ def update_myapply(request, myapply_id):
     data = {}
     try:
         data = json.loads(request.body)
-        data = html_escape(data, is_json=True)
-
         valid_apply(data)
     except Exception as e:
-        return HttpResponse(status=422, content=u'%s' % e.message)
+        logging.debug(u'%s' % e)
+        return HttpResponse(status=422)
     try:
+        print data
         myapply = MyApply.objects.get(id=myapply_id)
         if data['is_reapply']:
             if myapply.state == '1':
+                del data['is_reapply']
                 if data['attachment_id'] == -1:
+                    del data['attachment_id']
                     MyApply.objects.filter(id=myapply_id).update(
-                        apply_info=data['apply_info'],
-                        apply_des=data['apply_des'],
-                        state=u'0')
+                        state=u'0',
+                        **data)
                 else:
                     MyApply.objects.filter(id=myapply_id).update(
-                        apply_info=data['apply_info'],
-                        apply_des=data['apply_des'],
-                        attachment_id=data['attachment_id'],
-                        state=u'0')
+                        state=u'0',
+                        **data)
         else:
+            del data['is_reapply']
+
             if data['attachment_id'] == -1:
-                MyApply.objects.filter(id=myapply_id).update(
-                    apply_info=data['apply_info'],
-                    apply_des=data['apply_des'])
+                del data['attachment_id']
+
+                MyApply.objects.filter(id=myapply_id).update(**data)
             else:
-                MyApply.objects.filter(id=myapply_id).update(
-                    apply_info=data['apply_info'],
-                    apply_des=data['apply_des'],
-                    attachment_id=data['attachment_id'])
+                MyApply.objects.filter(id=myapply_id).update(**data)
     except Exception as e:
         return HttpResponse(status=400, content=u'%s' % e)
 
@@ -995,7 +1010,8 @@ def reject(request, apply_id):
         return HttpResponse(status=401)
     try:
         apply.reject()
-    except BaseException:
+    except Exception as e:
+        logging.debug(u'%s' % e)
         return HttpResponse(status=403)
     return HttpResponse(status=201)
 
@@ -1024,7 +1040,8 @@ def pass_check(request, apply_id):
         return HttpResponse(status=401)
     try:
         apply.pass_check()
-    except BaseException:
+    except Exception as e:
+        logging.debug(u'%s' % e)
         return HttpResponse(status=403)
     return HttpResponse(status=201)
 
@@ -1058,11 +1075,12 @@ def decide_award(request, apply_id):
         return HttpResponse(status=401)
 
     try:
-        json = html_escape(request.body, is_json=True)
-        data = json.loads(json)
+        data = json.loads(request.body)
         valid_decide(data)
     except Exception as e:
-        return HttpResponse(status=422, content=u'%s' % e.message)
+        logging.debug(u'%s' % e)
+
+        return HttpResponse(status=422)
 
     try:
         apply.decide_award(data)
