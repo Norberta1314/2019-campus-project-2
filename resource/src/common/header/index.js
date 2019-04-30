@@ -1,6 +1,11 @@
 import React, { Component } from 'react';
+import logoimg from '../../statics/logo.png'
+import avatar from '../../statics/avatar.png'
 import { connect } from 'react-redux';
-import headers from './style.scss'
+import './style.scss'
+import { Link } from 'react-router-dom';
+import { Menu, Dropdown, Icon } from 'antd';
+
 
 function mapStateToProps(state) {
   return {};
@@ -8,18 +13,60 @@ function mapStateToProps(state) {
 
 class Header extends Component {
   render() {
-
-    console.log(headers)
     return (
-      <div className={`${headers.m}`}>
-       miu
+      <div className="header-background">
+        <Link to='/'>
+          <div className='logo-block'>
+            <img className="logo" src={ logoimg } alt=''/>
+            <p className="logo-name">奖项申报系统</p>
+          </div>
+        </Link>
+        <div className='content'>
+          <div className='manage content-box'>
+            <Dropdown overlay={() =>
+              <Menu>
+                <Menu.Item>
+                  <Link to='/organization'>
+                    组织管理
+                  </Link>
+                </Menu.Item>
+                <Menu.Item>
+                  <Link to='/award'>
+                    奖项信息
+                  </Link>
+                </Menu.Item>
+              </Menu>
+            }>
+              <a className="ant-dropdown-link" href="#">
+                系统管理 <Icon type="down" />
+              </a>
+            </Dropdown>
+          </div>
+          <div className='check content-box'>
+            <Link to='/check'>
+              我的审核
+            </Link>
+          </div>
+
+          <div className='apply content-box'>
+            <Link to='/apply'>
+              我的申报
+            </Link>
+          </div>
+        </div>
+
+        <div className='userinfo'>
+          <img className='avatar' src={ avatar } alt=''/>
+          <div className='nickname'>
+            norberta
+          </div>
+        </div>
+
       </div>
     );
   }
 }
 
-// export default connect(
-//   mapStateToProps,
-// )(Header);
-
-export default Header;
+export default connect(
+  mapStateToProps,
+)(Header);
