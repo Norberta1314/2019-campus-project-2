@@ -35,7 +35,7 @@ const columns = [{
   key: 'state',
   render: (state) => (
     <span>
-      <div>{stateList[state + 1]}</div>
+      <div>{ stateList[state + 1] }</div>
     </span>
   )
 }, {
@@ -179,8 +179,6 @@ class Apply extends Component {
     console.log('123')
     // console.log(key)
   }
-
-
 }
 
 const mapState = (state) => ({})
