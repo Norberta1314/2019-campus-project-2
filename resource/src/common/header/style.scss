@@ -1,6 +1,63 @@
-.m {
-  min-width: 980px;
-  max-width: 1280px;
-  height: 50px;
-  background-color: #1b6d85;
+$header-height: 60px;
+
+.header-background {
+  display: flex;
+  flex-direction: row;
+
+  width: 100%;
+  height: $header-height;
+  border-bottom: solid 1px  #bbbbbb;
+  .logo-block {
+    display: flex;
+    flex-direction: row;
+    .logo {
+      width: 50px;
+      height: 50px;
+      margin: 4px;
+      margin-left: 100px;
+    }
+    .logo-name {
+      height: $header-height;
+      line-height: $header-height;
+      font-size: 20px;
+      margin: 0 0 0 10px;
+      color: #ea6f5a;
+    }
+  }
+  .userinfo {
+    display: flex;
+    flex-direction: row;
+    margin-left: 50px;
+    height: $header-height;
+    line-height: $header-height;
+    .avatar {
+      width: $header-height - 10px;
+      height: $header-height - 10px;
+      border-radius: $header-height - 10px;
+    }
+    .nickname {
+      font-size: 16px;
+      height: $header-height;
+      line-height: $header-height;
+      margin-left: 10px;
+    }
+  }
+  .content {
+    display: flex;
+    margin-left: 600px;
+    flex-direction: row;
+    height: $header-height;
+    line-height: $header-height;
+    .content-box {
+      display: flex;
+      flex-direction: row;
+      margin: 0 10px 0 10px;
+    }
+    .splice {
+      height: $header-height - 6px;
+      width: 2px;
+      margin: 0 5px 0 5px;
+      background-color: #999;
+    }
+  }
 }
