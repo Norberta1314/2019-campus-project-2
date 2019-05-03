@@ -87,8 +87,8 @@ ENABLE_BK_AUTH = True
 # ===============================================================================
 # 七牛云对象存储服务配置
 # ===============================================================================
-# QINIU_ACCESS_KEY = os.environ.get('BKAPP_QINIU_ACCESS_KEY', '')
-# QINIU_SECRET_KEY = '0n07J-gmyNha-HaVERTalfTd0W05bCEmUhJHX_HF'  #因为蓝鲸环境变量只允许部分字符所以拆分KEY为环境变量
-# QINIU_BUCKET_NAME = APP_CODE
-# QINIU_BUCKET_DOMAIN = 'pqg00vuko.bkt.clouddn.com'
+QINIU_ACCESS_KEY = os.environ.get('BKAPP_QINIU_ACCESS_KEY', '')
+QINIU_SECRET_KEY = '0n07J-gmyNha-HaVERTalfTd0W05bCEmUhJHX_HF'  #因为蓝鲸环境变量只允许部分字符所以拆分KEY为环境变量
+QINIU_BUCKET_NAME = APP_CODE
+QINIU_BUCKET_DOMAIN = 'pqg00vuko.bkt.clouddn.com'
 DEFAULT_FILE_STORAGE = 'qiniustorage.backends.QiniuStorage'

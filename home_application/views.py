@@ -1,11 +1,14 @@
 # -*- coding: utf-8 -*-
 from __future__ import unicode_literals
 
+import datetime
 import json
+import operator
 
 from django.core.files.storage import DefaultStorage
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db import transaction
+from django.db.models import Q
 from django.http import JsonResponse, response, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
@@ -386,6 +389,11 @@ class AwardView(AdminRequire, View):
 @apiGroup admin
 
 @apiParam {String} page 第几页 不存在为第一页
+@apiParam {Number} organization 查询参数 可选 所属组织
+@apiParam {Number} apply_award 查询参数 可选 申请奖项
+@apiParam {Number} check_state 查询参数 可选 审核状态 
+@apiParam {Number} start_time 查询参数 可选 
+@apiParam {Number} end_time 查询参数 可选
 @apiSuccessExample {json} Success-Response:
     {
         "counts": "15",
@@ -406,7 +414,25 @@ class AwardView(AdminRequire, View):
 @require_admin
 @require_GET
 def awards(request):
-    award_all = Awards.objects.filter(soft_del=False).all()
+    # 过滤字段
+    organization_f = request.GET.get('organization')
+    apply_award_f = request.GET.get('apply_award')
+    check_state_f = request.GET.get('check_state')
+    start_time_f = request.GET.get('start_time')
+    end_time_f = request.GET.get('end_time')
+    query_list = []
+
+    if organization_f is not None:
+        query_list.append(Q(organization__name__contains=organization_f))
+    if apply_award_f is not None:
+        query_list.append(Q(name_contains=apply_award_f))
+    if check_state_f is not None:
+        query_list.append(Q(is_active=check_state_f))
+    if start_time_f is not None and end_time_f is not None:
+        query_list.append(Q(start_time__gt=datetime.datetime.strptime(start_time_f, "%Y-%m-%d")))
+        query_list.append(Q(end_time__lt=datetime.datetime.strptime(end_time_f, "%Y-%m-%d")))
+
+    award_all = Awards.objects.filter(reduce(operator.or_, query_list), soft_del=False).all()
     paginator = Paginator(award_all, 10)
     page = request.GET.get('page', 1)
     try:
@@ -637,6 +663,12 @@ def awards_clone(request):
 @apiGroup apply
 
 @apiParam {Number} page 第几页 无 默认第一页
+
+
+@apiParam {Number} apply_award 查询参数 可选 申请奖项
+@apiParam {Number} check_state 查询参数 可选 审核状态 
+@apiParam {Number} start_time 查询参数 可选 
+@apiParam {Number} end_time 查询参数 可选
 @apiSuccessExample {json} Success-Response:
     {
         "counts": "15",
@@ -669,11 +701,28 @@ def my_applys(request):
     :param request:
     :return:
     """
+    # 过滤字段获取
+    apply_award_f = request.GET.get('apply_award')
+    check_state_f = request.GET.get('check_state')
+    start_time_f = request.GET.get('start_time')
+    end_time_f = request.GET.get('end_time')
+    award_query_list = []
+    apply_query_list = []
+
+
+    if apply_award_f is not None:
+        award_query_list.append(Q(name_contains=apply_award_f))
+    if check_state_f is not None:
+        apply_query_list.append(Q(state=check_state_f))
+    if start_time_f is not None and end_time_f is not None:
+        apply_query_list.append(Q(apply_time__gt=datetime.datetime.strptime(start_time_f, "%Y-%m-%d")))
+        apply_query_list.append(Q(apply_time__lt=datetime.datetime.strptime(end_time_f, "%Y-%m-%d")))
+
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
     user = request.user
-    not_applys = get_my_not_apply(user, user_qq)
-    applys = get_my_apply(user, user_qq)
+    not_applys = get_my_not_apply(user, user_qq, award_query_list, apply_query_list)
+    applys = get_my_apply(user, user_qq, award_query_list, apply_query_list)
     applys.extend(not_applys)
     paginator = Paginator(applys, 10)
     page = request.GET.get('page', 1)

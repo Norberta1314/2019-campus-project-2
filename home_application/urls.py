@@ -20,6 +20,7 @@ urlpatterns = patterns(
     (r'^my/applys$', 'my_applys'),
     (r'^my/apply/([0-9]{1,})$', MyApplyView.as_view()),
     (r'^myapply/award/([0-9]{1,})$', 'get_apply_award'),
+    (r'^attachment$', 'upload_attachment'),
     (r'^my/checks$', 'get_check_list'),
     (r'^my/check/reject/([0-9]{1,})$', 'reject'),
     (r'^my/check/pass/([0-9]{1,})$', 'pass_check'),
