@@ -27,6 +27,7 @@ from home_application.decorators import require_admin, require_head
 from home_application.models import Organizations, Awards, Attachment, MyApply
 from home_application.utils import valid_organization, valid_award, valid_apply, valid_decide, is_organ_head, \
     get_my_apply, get_my_not_apply, get_my_check, is_head
+from functools import reduce
 
 
 def home(request):
@@ -391,8 +392,8 @@ class AwardView(AdminRequire, View):
 @apiParam {String} page 第几页 不存在为第一页
 @apiParam {Number} organization 查询参数 可选 所属组织
 @apiParam {Number} apply_award 查询参数 可选 申请奖项
-@apiParam {Number} check_state 查询参数 可选 审核状态 
-@apiParam {Number} start_time 查询参数 可选 
+@apiParam {Number} check_state 查询参数 可选 审核状态 1 True 0 False
+@apiParam {Number} start_time 查询参数 可选
 @apiParam {Number} end_time 查询参数 可选
 @apiSuccessExample {json} Success-Response:
     {
@@ -418,6 +419,7 @@ def awards(request):
     organization_f = request.GET.get('organization')
     apply_award_f = request.GET.get('apply_award')
     check_state_f = request.GET.get('check_state')
+    check_state_f = True if check_state_f == '1' else False
     start_time_f = request.GET.get('start_time')
     end_time_f = request.GET.get('end_time')
     query_list = []
@@ -425,14 +427,20 @@ def awards(request):
     if organization_f is not None:
         query_list.append(Q(organization__name__contains=organization_f))
     if apply_award_f is not None:
-        query_list.append(Q(name_contains=apply_award_f))
+        query_list.append(Q(name__contains=apply_award_f))
     if check_state_f is not None:
         query_list.append(Q(is_active=check_state_f))
     if start_time_f is not None and end_time_f is not None:
-        query_list.append(Q(start_time__gt=datetime.datetime.strptime(start_time_f, "%Y-%m-%d")))
-        query_list.append(Q(end_time__lt=datetime.datetime.strptime(end_time_f, "%Y-%m-%d")))
+        query_list.append(
+            Q(start_time__gt=datetime.datetime.strptime(start_time_f, "%Y-%m-%d")))
+        query_list.append(
+            Q(end_time__lt=datetime.datetime.strptime(end_time_f, "%Y-%m-%d")))
 
-    award_all = Awards.objects.filter(reduce(operator.or_, query_list), soft_del=False).all()
+    award_all = Awards.objects.filter(
+        reduce(
+            operator.or_,
+            query_list),
+        soft_del=False).all()
     paginator = Paginator(award_all, 10)
     page = request.GET.get('page', 1)
     try:
@@ -666,8 +674,8 @@ def awards_clone(request):
 
 
 @apiParam {Number} apply_award 查询参数 可选 申请奖项
-@apiParam {Number} check_state 查询参数 可选 审核状态 
-@apiParam {Number} start_time 查询参数 可选 
+@apiParam {Number} check_state 查询参数 可选 审核状态
+@apiParam {Number} start_time 查询参数 可选
 @apiParam {Number} end_time 查询参数 可选
 @apiSuccessExample {json} Success-Response:
     {
@@ -709,20 +717,26 @@ def my_applys(request):
     award_query_list = []
     apply_query_list = []
 
-
     if apply_award_f is not None:
-        award_query_list.append(Q(name_contains=apply_award_f))
-    if check_state_f is not None:
-        apply_query_list.append(Q(state=check_state_f))
-    if start_time_f is not None and end_time_f is not None:
-        apply_query_list.append(Q(apply_time__gt=datetime.datetime.strptime(start_time_f, "%Y-%m-%d")))
-        apply_query_list.append(Q(apply_time__lt=datetime.datetime.strptime(end_time_f, "%Y-%m-%d")))
+        award_query_list.append(Q(name__contains=apply_award_f))
 
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
     user = request.user
-    not_applys = get_my_not_apply(user, user_qq, award_query_list, apply_query_list)
-    applys = get_my_apply(user, user_qq, award_query_list, apply_query_list)
+    not_applys = get_my_not_apply(
+        user, user_qq, award_query_list, apply_query_list) if (
+        (start_time_f is None and end_time_f is None) or check_state_f == '-1') else []
+    if check_state_f is not None:
+        if check_state_f != '-1':
+            apply_query_list.append(Q(state=check_state_f))
+    if start_time_f is not None and end_time_f is not None:
+        apply_query_list.append(Q(apply_time__range=(datetime.datetime.strptime(
+            start_time_f, "%Y-%m-%d"), datetime.datetime.strptime(end_time_f, "%Y-%m-%d"))))
+    applys = get_my_apply(
+        user,
+        user_qq,
+        award_query_list,
+        apply_query_list) if check_state_f != '-1' else []
     applys.extend(not_applys)
     paginator = Paginator(applys, 10)
     page = request.GET.get('page', 1)

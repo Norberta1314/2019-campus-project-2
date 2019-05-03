@@ -8,6 +8,7 @@ from django import forms
 from common.pxfilter import XssHtml
 from common.utils import html_escape
 from home_application.models import MyApply, OrganizationsUser, Awards
+from functools import reduce
 
 
 def valid_organization(data):
@@ -85,20 +86,34 @@ def is_organ_head(self, user_qq, organ):
         user=user_qq, type=u'0', organization=organ).exists()
 
 
-def get_my_not_apply(self, user_qq, award_Q_list, apply_Q_list):
+def get_my_not_apply(self, user_qq, award_Q_list=[], apply_Q_list=[]):
     organs = OrganizationsUser.objects.filter(
         user=user_qq, type=u'1').all()
     awards = []
     for item in organs:
-        temp = Awards.objects.filter(reduce(operator.or_, award_Q_list) ,organization=item.organization).all()
+        if len(award_Q_list) > 0:
+            temp = Awards.objects.filter(
+                reduce(
+                    operator.or_,
+                    award_Q_list),
+                organization=item.organization).all()
+        else:
+            temp = Awards.objects.filter(organization=item.organization).all()
         for item_t in temp:
             awards.append(item_t.id)
 
     applys = MyApply.objects.filter(award_id__in=awards, user=self).all()
     not_awards_id = [item.award.id for item in applys]
-    print not_awards_id
-    # not_awards = Awards.objects.in_bulk(not_awards_id)
-    not_awards = Awards.objects.exclude(id__in=not_awards_id).filter(reduce(operator.or_, award_Q_list)).all()
+    not_awards = Awards.objects.in_bulk(not_awards_id)
+    if len(apply_Q_list) > 0:
+        not_awards = Awards.objects.exclude(
+            id__in=not_awards_id).filter(
+            reduce(
+                operator.or_,
+                apply_Q_list)).all()
+    else:
+        not_awards = Awards.objects.exclude(id__in=not_awards_id).all()
+
     ret = []
     for item in not_awards:
         ret.append({
@@ -117,11 +132,26 @@ def get_my_apply(self, user_qq, award_Q_list, apply_Q_list):
         user=user_qq, type=u'1').all()
     awards = []
     for item in organs:
-        temp = Awards.objects.filter(reduce(operator.or_, award_Q_list), organization=item.organization).all()
+        if len(award_Q_list) > 0:
+            temp = Awards.objects.filter(
+                reduce(
+                    operator.or_,
+                    award_Q_list),
+                organization=item.organization).all()
+        else:
+            temp = Awards.objects.filter(organization=item.organization).all()
         for item_t in temp:
             awards.append(item_t.id)
 
-    applys = MyApply.objects.filter(reduce(operator.or_, award_Q_list), award_id__in=awards).all()
+    if len(apply_Q_list) > 0:
+        applys = MyApply.objects.filter(
+            reduce(
+                operator.or_,
+                apply_Q_list),
+            award_id__in=awards).all()
+    else:
+        applys = MyApply.objects.filter(award_id__in=awards).all()
+
     ret = []
     for item in applys:
         ret.append({

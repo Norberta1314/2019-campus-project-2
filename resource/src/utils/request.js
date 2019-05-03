@@ -68,6 +68,7 @@ export default function request(url, option) {
       // newOptions.body is FormData
       newOptions.headers = {
         Accept: 'application/json',
+        'X-CSRFToken': get('csrftoken'),
         ...newOptions.headers,
       };
     }
