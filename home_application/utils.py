@@ -132,42 +132,37 @@ def get_my_not_apply(self, user_qq, award_Q_list=[], apply_Q_list=[]):
     return ret
 
 
-def get_my_apply(self, user_qq, award_Q_list, apply_Q_list):
-    organs = OrganizationsUser.objects.filter(
-        user=user_qq, type=u'1').all()
-    awards = []
-    for item in organs:
-        if len(award_Q_list) > 0:
-            temp = Awards.objects.filter(
-                reduce(
-                    operator.or_,
-                    award_Q_list),
-                organization=item.organization).all()
-        else:
-            temp = Awards.objects.filter(organization=item.organization).all()
-        for item_t in temp:
-            awards.append(item_t.id)
-
+def get_my_apply(self, user_qq,apply_Q_list, sql_where_list):
+    awards = Awards.objects.raw('select `awards`.id from `awards` join `organizations` o on `awards`.`organization_id` = `o`.`id` join `home_application_organizationsuser` `hao` on `o`.`id` = `hao`.`organization_id` where `hao`.`type` = \'0\' and o.soft_del = 0')
+    awards = [str(item.id) for item in awards]
+    awards = ','.join(awards)
+    awards = ' `awards`.`id` in (' + awards + ') '
+    # if len(apply_Q_list) > 0:
+    #     applys = MyApply.objects.filter(
+    #         reduce(
+    #             operator.or_,
+    #             apply_Q_list),
+    #         award_id__in=awards).order_by('-id').all()
+    # else:
+    #     applys = MyApply.objects.filter(award_id__in=awards).order_by('-id').all()
+    print sql_where_list
     if len(apply_Q_list) > 0:
-        applys = MyApply.objects.filter(
-            reduce(
-                operator.or_,
-                apply_Q_list),
-            award_id__in=awards).order_by('-id').all()
+        applys = MyApply.objects.raw('select `awards`.`id`,`awards`.id as award_id, `my_applys`.id as apply_id, `my_applys`.`apply_info`, `o`.`name`, `awards`.`name` as apply_award, `awards`.`is_active` as award_state, `my_applys`.`state`, `my_applys`.`apply_time` from `awards` left join `my_applys` on `awards`.`id` = `my_applys`.`award_id` join organizations o on awards.organization_id = o.id' + sql_where_list + awards +' order by award_id desc', apply_Q_list)
     else:
-        applys = MyApply.objects.filter(award_id__in=awards).order_by('-id').all()
-
+        applys = MyApply.objects.raw('select `awards`.`id`,`awards`.id as award_id, `my_applys`.id as apply_id, `my_applys`.`apply_info`, `o`.`name`, `awards`.`name` as apply_award, `awards`.`is_active` as award_state, `my_applys`.`state`, `my_applys`.`apply_time` from `awards` left join `my_applys` on `awards`.`id` = `my_applys`.`award_id` join organizations o on awards.organization_id = o.id' + sql_where_list + awards +' and awards.soft_del = 0 order by award_id desc')
     ret = []
+    print applys
+
     for item in applys:
         ret.append({
-            'apply_id': item.id,
+            'apply_id': item.apply_id,
             'apply_info': item.apply_info,
-            'award_id': item.award.id,
-            'organization': item.award.organization.name,
-            'apply_award': item.award.name,
-            'award_state': item.award.is_active,
-            'state': item.state,
-            'apply_time': item.apply_time.strftime("%Y-%m-%d %H:%M:%S"),
+            'award_id': item.award_id,
+            'organization': item.name,
+            'apply_award': item.apply_award,
+            'award_state': item.award_state,
+            'state': item.state if item.state is not None else '-1',
+            'apply_time': str(item.apply_time),
         })
     return ret
 

@@ -714,30 +714,43 @@ def my_applys(request):
     check_state_f = request.GET.get('check_state')
     start_time_f = request.GET.get('start_time')
     end_time_f = request.GET.get('end_time')
-    award_query_list = []
     apply_query_list = []
+    apply_query_sql_where = ''
+    temp_sql_list = []
 
     if apply_award_f is not None:
-        award_query_list.append(Q(name__contains=apply_award_f))
+        apply_query_sql_where += '`awards`.`name` like %s '
+        temp_sql_list.append('`awards`.`name` like %s ')
+        apply_query_list.append('%%%s%%' % apply_award_f)
+        # apply_query_list.append(Q(name__contains=apply_award_f))
 
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
     user = request.user
-    not_applys = get_my_not_apply(
-        user, user_qq, award_query_list, apply_query_list) if (
-        (start_time_f is None and end_time_f is None) or check_state_f == '-1') else []
     if check_state_f is not None:
-        if check_state_f != '-1':
-            apply_query_list.append(Q(state=check_state_f))
+        if check_state_f == '-1':
+            temp_sql_list.append('`my_applys`.`state` is null ')
+            # apply_query_list.append(Q(state=None))
+        else:
+            temp_sql_list.append('`my_applys`.`state` = %s')
+            apply_query_list.append(check_state_f)
     if start_time_f is not None and end_time_f is not None:
-        apply_query_list.append(Q(apply_time__range=(datetime.datetime.strptime(
-            start_time_f, "%Y-%m-%d"), datetime.datetime.strptime(end_time_f, "%Y-%m-%d"))))
+        apply_query_sql_where += 'or `my_applys`.`apply_time` BETWEEN %s AND %s'
+        temp_sql_list.append('`my_applys`.`apply_time` BETWEEN %s AND %s')
+        apply_query_list.append(datetime.datetime.strptime(
+            start_time_f, "%Y-%m-%d"))
+        apply_query_list.append(datetime.datetime.strptime(
+            end_time_f, "%Y-%m-%d"))
+    if len(apply_query_list) > 0 or check_state_f is not None:
+        apply_query_sql_where = ' where (' + ' or '.join(temp_sql_list) + ') and'
+    else:
+        apply_query_sql_where = ' where '
     applys = get_my_apply(
         user,
         user_qq,
-        award_query_list,
-        apply_query_list) if check_state_f != '-1' else []
-    applys.extend(not_applys)
+        apply_query_list,
+        apply_query_sql_where
+        )
     paginator = Paginator(applys, 10)
     page = request.GET.get('page', 1)
     try:
