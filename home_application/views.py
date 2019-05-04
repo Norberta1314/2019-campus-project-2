@@ -26,7 +26,7 @@ from common.utils import html_escape
 from home_application.decorators import require_admin, require_head
 from home_application.models import Organizations, Awards, Attachment, MyApply
 from home_application.utils import valid_organization, valid_award, valid_apply, valid_decide, is_organ_head, \
-    get_my_apply, get_my_not_apply, get_my_check, is_head
+    get_my_apply, get_my_not_apply, get_my_check, is_head, InvalidData
 from functools import reduce
 
 
@@ -197,7 +197,7 @@ def organization_get_put_delete(request, organization_id):
 @require_admin
 @require_GET
 def organizations(request):
-    organization_all = Organizations.objects.filter(soft_del=False).all()
+    organization_all = Organizations.objects.filter(soft_del=False).order_by('id').all()
     paginator = Paginator(organization_all, 10)
     page = request.GET.get('page', 1)
     try:
@@ -419,7 +419,6 @@ def awards(request):
     organization_f = request.GET.get('organization')
     apply_award_f = request.GET.get('apply_award')
     check_state_f = request.GET.get('check_state')
-    check_state_f = True if check_state_f == '1' else False
     start_time_f = request.GET.get('start_time')
     end_time_f = request.GET.get('end_time')
     query_list = []
@@ -429,18 +428,19 @@ def awards(request):
     if apply_award_f is not None:
         query_list.append(Q(name__contains=apply_award_f))
     if check_state_f is not None:
+        check_state_f = True if check_state_f == '1' else False
         query_list.append(Q(is_active=check_state_f))
     if start_time_f is not None and end_time_f is not None:
-        query_list.append(
-            Q(start_time__gt=datetime.datetime.strptime(start_time_f, "%Y-%m-%d")))
-        query_list.append(
-            Q(end_time__lt=datetime.datetime.strptime(end_time_f, "%Y-%m-%d")))
-
-    award_all = Awards.objects.filter(
-        reduce(
-            operator.or_,
-            query_list),
-        soft_del=False).all()
+        query_list.append(Q(start_time__gt=datetime.datetime.strptime(
+            start_time_f, "%Y-%m-%d")) & Q(end_time__lt=datetime.datetime.strptime(end_time_f, "%Y-%m-%d")))
+    if len(query_list) > 0:
+        award_all = Awards.objects.filter(
+            reduce(
+                operator.or_,
+                query_list),
+            soft_del=False).order_by('-id').all()
+    else:
+        award_all = Awards.objects.filter(soft_del=False).order_by('-id').all()
     paginator = Paginator(award_all, 10)
     page = request.GET.get('page', 1)
     try:
@@ -529,7 +529,7 @@ def update_award(request, award_id):
     try:
         data = json.loads(request.body)
         valid_award(data)
-    except Exception as e:
+    except InvalidData as e:
         logging.debug(u'%s' % e)
         return HttpResponse(status=422, content=u'%s' % e.message)
 
@@ -641,7 +641,7 @@ def awards_clone(request):
         data = json.loads(request.body)
         for item in data:
             valid_award(item)
-    except Exception as e:
+    except InvalidData as e:
         logging.debug(u'%s' % e)
         return HttpResponse(status=422)
 
@@ -791,7 +791,7 @@ def apply_award(request, award_id):
     try:
         data = json.loads(request.body)
         valid_apply(data)
-    except Exception as e:
+    except InvalidData as e:
         logging.debug(u'%s' % e)
         return HttpResponse(status=422, content=u'%s' % e.message)
     try:
@@ -916,7 +916,7 @@ def update_myapply(request, myapply_id):
     try:
         data = json.loads(request.body)
         valid_apply(data)
-    except Exception as e:
+    except InvalidData as e:
         logging.debug(u'%s' % e)
         return HttpResponse(status=422)
     try:
@@ -1140,7 +1140,7 @@ def decide_award(request, apply_id):
     try:
         data = json.loads(request.body)
         valid_decide(data)
-    except Exception as e:
+    except InvalidData as e:
         logging.debug(u'%s' % e)
 
         return HttpResponse(status=422)

@@ -11,6 +11,11 @@ from home_application.models import MyApply, OrganizationsUser, Awards
 from functools import reduce
 
 
+
+
+class InvalidData(Exception):
+    pass
+
 def valid_organization(data):
     if data['name'] != '':
         pass
@@ -19,10 +24,10 @@ def valid_organization(data):
         #         data['name']) is not None:
         #     raise Exception(u'含有非法字符')
     else:
-        raise Exception(u'组织名字不能为空')
+        raise InvalidData(u'组织名字不能为空')
 
     if len(data['head']) == 0 or len(data['eva_member']) == 0:
-        raise Exception(u'负责人或评价人员不能为空')
+        raise InvalidData(u'负责人或评价人员不能为空')
 
     data = json.loads(html_escape(json.dumps(data), is_json=True))
 
@@ -35,11 +40,11 @@ def valid_award(data):
         #         data['name']) is not None:
         #     raise Exception(u'含有非法字符')
     else:
-        raise Exception(u'奖项名字不能为空')
+        raise InvalidData(u'奖项名字不能为空')
 
     for k, v in data.items():
         if v is '' or v is None:
-            raise Exception(u'不能为空')
+            raise InvalidData(u'不能为空')
 
     # 验证时xss富文本过滤
     parser = XssHtml()
@@ -52,7 +57,7 @@ def valid_award(data):
 def valid_apply(data):
     for k, v in data.items():
         if v is '' or v is None:
-            raise Exception(u'不能为空')
+            raise InvalidData(u'不能为空')
 
     data = json.loads(html_escape(json.dumps(data), is_json=True))
 
@@ -60,7 +65,7 @@ def valid_apply(data):
 def valid_decide(data):
     for k, v in data.items():
         if v is '' or v is None:
-            raise Exception(u'不能为空')
+            raise InvalidData(u'不能为空')
     data = json.loads(html_escape(json.dumps(data), is_json=True))
 
 
@@ -112,7 +117,7 @@ def get_my_not_apply(self, user_qq, award_Q_list=[], apply_Q_list=[]):
                 operator.or_,
                 apply_Q_list)).all()
     else:
-        not_awards = Awards.objects.exclude(id__in=not_awards_id).all()
+        not_awards = Awards.objects.exclude(id__in=not_awards_id).order_by('-id').all()
 
     ret = []
     for item in not_awards:
@@ -148,9 +153,9 @@ def get_my_apply(self, user_qq, award_Q_list, apply_Q_list):
             reduce(
                 operator.or_,
                 apply_Q_list),
-            award_id__in=awards).all()
+            award_id__in=awards).order_by('-id').all()
     else:
-        applys = MyApply.objects.filter(award_id__in=awards).all()
+        applys = MyApply.objects.filter(award_id__in=awards).order_by('-id').all()
 
     ret = []
     for item in applys:
@@ -175,7 +180,7 @@ def get_my_check(self, user_qq):
         for item_t in temp:
             awards.append(item_t.id)
 
-    applys = MyApply.objects.filter(award_id__in=awards).all()
+    applys = MyApply.objects.filter(award_id__in=awards).order_by('-id').all()
     ret = []
     for item in applys:
         ret.append({
