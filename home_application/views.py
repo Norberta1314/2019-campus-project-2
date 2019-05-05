@@ -197,7 +197,8 @@ def organization_get_put_delete(request, organization_id):
 @require_admin
 @require_GET
 def organizations(request):
-    organization_all = Organizations.objects.filter(soft_del=False).order_by('id').all()
+    organization_all = Organizations.objects.filter(
+        soft_del=False).order_by('id').all()
     paginator = Paginator(organization_all, 10)
     page = request.GET.get('page', 1)
     try:
@@ -735,14 +736,14 @@ def my_applys(request):
             temp_sql_list.append('`my_applys`.`state` = %s')
             apply_query_list.append(check_state_f)
     if start_time_f is not None and end_time_f is not None:
-        apply_query_sql_where += 'or `my_applys`.`apply_time` BETWEEN %s AND %s'
         temp_sql_list.append('`my_applys`.`apply_time` BETWEEN %s AND %s')
         apply_query_list.append(datetime.datetime.strptime(
             start_time_f, "%Y-%m-%d"))
         apply_query_list.append(datetime.datetime.strptime(
             end_time_f, "%Y-%m-%d"))
     if len(apply_query_list) > 0 or check_state_f is not None:
-        apply_query_sql_where = ' where (' + ' or '.join(temp_sql_list) + ') and'
+        apply_query_sql_where = ' where (' + \
+            ' or '.join(temp_sql_list) + ') and'
     else:
         apply_query_sql_where = ' where '
     applys = get_my_apply(
@@ -750,7 +751,7 @@ def my_applys(request):
         user_qq,
         apply_query_list,
         apply_query_sql_where
-        )
+    )
     paginator = Paginator(applys, 10)
     page = request.GET.get('page', 1)
     try:
@@ -912,6 +913,7 @@ def get_apply_award(request, award_id):
 @apiParam {String}  apply_info 申报人/团队 需要xss过滤
 @apiParam {String}  apply_des 事迹介绍
 @apiParam {Number}  attachment_id 附件id 无就-1
+@apiParam {Bool}  is_reapply 重新申请 true 不是 false
 
 
 @apiParamExample {json} Request-Example:
@@ -1184,7 +1186,7 @@ def decide_award(request, apply_id):
 @apiSuccessExample {json} Success-Response:
     {
         "counts": "15",
-        "awards":  [
+        "result":  [
         {
             award_id: 'xx',
             organization: 'xxx',
@@ -1204,7 +1206,17 @@ def can_apply_list(request):
     user_qq = transform_uin(uin)
     user = request.user
     can_applys = get_my_not_apply(user, user_qq)
-    return render_json(can_applys)
+    paginator = Paginator(can_applys, 10)
+    page = request.GET.get('page', 1)
+    try:
+        result = paginator.page(page)
+    except PageNotAnInteger:
+        result = paginator.page(1)
+    except EmptyPage:
+        result = paginator.page(paginator.count)
+    return render_json(
+        {'counts': paginator.count, 'result': result.object_list})
+
 
 
 """
