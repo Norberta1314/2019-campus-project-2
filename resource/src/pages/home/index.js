@@ -108,11 +108,11 @@ class Home extends Component {
         img: awardList1,
         award_title: '运营安全组2017年Q3季度奖评选'
       }, {
-        award_id: 1,
+        award_id: 2,
         img: awardList2,
         award_title: '运营安全组2017年Q3季度奖评选'
       }, {
-        award_id: 1,
+        award_id: 3,
         img: awardList3,
         award_title: '运营安全组2017年Q3季度奖评选'
       }],
@@ -131,7 +131,7 @@ class Home extends Component {
         </div>
         <div className='currentAward'>
           { this.state.awardList.map((item) => (
-            <div className='awardList'>
+            <div className='awardList' key={item.award_id}>
               <img className='awardImg' src={ item.img } alt=''/>
               <p>{ item.award_title }</p>
             </div>
@@ -146,7 +146,7 @@ class Home extends Component {
   }
 
   componentDidMount() {
-    this.props.changeUserPer
+    this.props.changeUserPer()
   }
 
   onClickSearchApplyState() {

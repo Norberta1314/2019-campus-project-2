@@ -6,9 +6,11 @@ const defaultState = {
 
 export default (state = defaultState, action) => {
   if (action.type === actionTypes.ADD_USER) {
+    const newState = JSON.parse(JSON.stringify(state));
+    newState.user = action.user
     console.log("reducer")
     console.log(action.user)
-    return state.set('user', action.user)
+    return newState
   }
   return state
 }

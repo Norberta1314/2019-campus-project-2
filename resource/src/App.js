@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { connect } from 'react-redux';
 import { Provider } from 'react-redux';
 import { BrowserRouter, Route } from 'react-router-dom';
 import store from './store'
@@ -12,6 +13,7 @@ import EditApply from './pages/editApply'
 import NewApply from './pages/newApply'
 import ApplyDetail from './pages/applyDetail'
 import checkDetail from './pages/checkDetail'
+import * as actionCreators from './pages/home/store/actionCreators'
 
 class App extends Component {
   render() {
@@ -20,7 +22,7 @@ class App extends Component {
         <BrowserRouter>
           <div>
             <Header/>
-            <Route path='/home' component={Home}/>
+            <Route path='/home' component={ Home }/>
             <Route path='/apply' exact component={ Apply }/>
             <Route path='/check' exact component={ Check }/>
             <Route path='/organization' exact component={ Organization }/>
@@ -35,6 +37,7 @@ class App extends Component {
       </Provider>
     )
   }
+
 }
 
 export default App;
