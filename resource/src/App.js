@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Provider } from 'react-redux';
 import { BrowserRouter, Route } from 'react-router-dom';
 import store from './store'
+import Home from './pages/home'
 import Header from './common/header'
 import Apply from './pages/apply'
 import Check from './pages/check'
@@ -19,6 +20,7 @@ class App extends Component {
         <BrowserRouter>
           <div>
             <Header/>
+            <Route path='/home' component={Home}/>
             <Route path='/apply' exact component={ Apply }/>
             <Route path='/check' exact component={ Check }/>
             <Route path='/organization' exact component={ Organization }/>

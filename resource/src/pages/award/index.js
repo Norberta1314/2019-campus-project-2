@@ -188,7 +188,7 @@ class Award extends Component {
             label="申报时间"
             style={ {marginLeft: '20px'} }
           >
-            <RangePicker showTime format="YYYY-MM-DD HH:mm:ss" />
+            <RangePicker />
           </Form.Item>
           <Form.Item>
             <Button
