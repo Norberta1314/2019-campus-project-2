@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
-  Form, Button, Input, Dropdown, Menu, Icon, DatePicker, Table, Divider
+  Form, Button, Input, Dropdown, Menu, Icon, DatePicker, Table, Divider, Breadcrumb
 } from 'antd'
 import { Link } from 'react-router-dom';
 import './style.scss'
@@ -132,6 +132,15 @@ class Apply extends Component {
 
     return (
       <div className='apply-background'>
+        <Breadcrumb style={{marginBottom:40}}>
+          <Breadcrumb.Item>Home</Breadcrumb.Item>
+          <Breadcrumb.Item>
+            <a href="">个人中心</a>
+          </Breadcrumb.Item>
+          <Breadcrumb.Item>
+            <a href="">我的申报</a>
+          </Breadcrumb.Item>
+        </Breadcrumb>
         <Form layout="inline">
           <Form.Item
             label="申报奖项">

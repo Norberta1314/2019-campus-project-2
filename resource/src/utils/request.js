@@ -49,7 +49,11 @@ const baseURL = window.site_url
 // const baseURL = 'https://api.ipingdong.com';
 export default function request(url, option) {
   const defaultOptions = {
-    credentials: 'omit',
+    ccredentials: 'include',
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest',
+      'X-CSRFToken': get('csrftoken'),
+    }
   };
   const newOptions = { ...defaultOptions, ...option };
   if (

@@ -2,7 +2,7 @@ import React, { Component } from 'react';
 import connect from 'react-redux/es/connect/connect';
 import './style.scss'
 import AwardDetail from '../../common/awardDetail'
-import { Form, Steps, Input, Upload, Button, Icon } from 'antd';
+import { Form, Steps, Input, Upload, Button, Icon, Breadcrumb } from 'antd';
 
 
 //申报
@@ -24,6 +24,18 @@ class applyDetail extends Component {
     };
     return (
       <div className='newApply-background'>
+        <Breadcrumb style={ {marginBottom: 40} }>
+          <Breadcrumb.Item>Home</Breadcrumb.Item>
+          <Breadcrumb.Item>
+            <a href="">个人中心</a>
+          </Breadcrumb.Item>
+          <Breadcrumb.Item>
+            <a href="">我的申报</a>
+          </Breadcrumb.Item>
+          <Breadcrumb.Item>
+            <a href="">申报详情</a>
+          </Breadcrumb.Item>
+        </Breadcrumb>
         <AwardDetail/>
         <Steps current={ 0 } style={ {marginTop: 40} }>
           <Steps.Step title="申报" description="开始申报"/>
@@ -52,7 +64,7 @@ class applyDetail extends Component {
               </Button>
             </Upload>
           </Form.Item>
-          <Form.Item style={{marginLeft:550}}>
+          <Form.Item style={ {marginLeft: 550} }>
             <Button type="primary">返回</Button>
           </Form.Item>
         </Form>

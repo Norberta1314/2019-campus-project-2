@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import connect from 'react-redux/es/connect/connect';
-import { Divider, Table } from 'antd';
+import { Breadcrumb, Divider, Table } from 'antd';
 import './style.scss'
 import { Link } from 'react-router-dom';
 
@@ -111,6 +111,15 @@ class Check extends Component {
   render() {
     return (
       <div className='check-background'>
+        <Breadcrumb style={{marginBottom:40}}>
+          <Breadcrumb.Item>Home</Breadcrumb.Item>
+          <Breadcrumb.Item>
+            <a href="">个人中心</a>
+          </Breadcrumb.Item>
+          <Breadcrumb.Item>
+            <a href="">我的审核</a>
+          </Breadcrumb.Item>
+        </Breadcrumb>
         <Table columns={ columns } dataSource={ checkList } style={ {marginTop: '30px'} }/>
       </div>
     );

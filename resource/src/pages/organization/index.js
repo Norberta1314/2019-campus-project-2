@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
-import { Divider, Table } from 'antd';
-import Button from 'antd/lib/button';
+import { Divider, Table, Button, Breadcrumb } from 'antd';
 
 const columns = [{
   title: '所属单位',
@@ -23,7 +22,7 @@ const columns = [{
   title: '申报时间',
   dataIndex: 'apply_time',
   key: 'apply_time'
-},{
+}, {
   title: '操作',
   key: 'action',
   render: () => (
@@ -47,7 +46,7 @@ const OrginzationList = [{
   eva_member: ['邹伟'],
   up_member: 'admin',
   apply_time: '2014-12-31 18:20:1'
-} ,{
+}, {
   organization: '蓝鲸产品中心',
   head: ['邹伟'],
   eva_member: ['赖铭'],
@@ -65,7 +64,17 @@ class Organization extends Component {
   render() {
     return (
       <div className='check-background'>
-        <Button style={{marginTop: '30px'}}>添加</Button>
+        <Breadcrumb>
+          <Breadcrumb.Item>Home</Breadcrumb.Item>
+          <Breadcrumb.Item>
+            <a href="">系统管理</a>
+          </Breadcrumb.Item>
+          <Breadcrumb.Item>
+            <a href="">组织管理</a>
+          </Breadcrumb.Item>
+        </Breadcrumb>
+
+        <Button style={ {marginTop: '30px'} }>添加</Button>
         <Table columns={ columns } dataSource={ OrginzationList } style={ {marginTop: '30px'} }/>
 
       </div>
