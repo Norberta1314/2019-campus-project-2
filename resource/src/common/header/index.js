@@ -27,31 +27,38 @@ class Header extends Component {
           </div>
         </Link>
         <div className='content'>
-          <div className='manage content-box'>
-            <Dropdown overlay={ () =>
-              <Menu>
-                <Menu.Item>
-                  <Link to='/organization'>
-                    组织管理
-                  </Link>
-                </Menu.Item>
-                <Menu.Item>
-                  <Link to='/award'>
-                    奖项信息
-                  </Link>
-                </Menu.Item>
-              </Menu>
-            }>
-              <a className="ant-dropdown-link" href="#">
-                系统管理 <Icon type="down"/>
-              </a>
-            </Dropdown>
-          </div>
-          <div className='check content-box'>
-            <Link to='/check'>
-              我的审核
-            </Link>
-          </div>
+          {
+            'admin' in this.props.user.permission ? (<div className='manage content-box'>
+              <Dropdown overlay={ () =>
+                <Menu>
+
+                  <Menu.Item>
+                    <Link to='/organization'>
+                      组织管理
+                    </Link>
+                  </Menu.Item>
+                  <Menu.Item>
+                    <Link to='/award'>
+                      奖项信息
+                    </Link>
+                  </Menu.Item>
+                </Menu>
+              }>
+                <a className="ant-dropdown-link" href="#">
+                  系统管理 <Icon type="down"/>
+                </a>
+              </Dropdown>
+            </div>) : ''
+          }
+
+          {
+            'head' in this.props.user.permission ? (<div className='check content-box'>
+              <Link to='/check'>
+                我的审核
+              </Link>
+            </div>) : ''
+          }
+
 
           <div className='apply content-box'>
             <Link to='/apply'>
@@ -63,8 +70,8 @@ class Header extends Component {
         <div className='userinfo'>
           <img className='avatar' src={ this.props.user.avatar } alt=''/>
           <div className='nickname'>
-            {/*norberta*/}
-            {this.props.user.nick}
+            {/*norberta*/ }
+            { this.props.user.nick }
           </div>
         </div>
 
