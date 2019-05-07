@@ -1,0 +1,1 @@
+export const ADD_AWARD_LIST = 'apply/add_award_list'

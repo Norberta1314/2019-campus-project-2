@@ -48,65 +48,15 @@ const columns = [{
   key: 'action',
   render: (text, record) => (
     <span>
-      { record.state === -1 ? <Link to={'/newApply/' + record.apply_id}>申报</Link> : '' }
-      { record.state === 0 || record.state === 2 ? <Link to={'/editApply/' + record.apply_id}>编辑</Link> : '' }
-      { record.state === 1 ? <div><Link to={'/editApply/' + record.apply_id}>编辑</Link>
+      { record.state === -1 ? <Link to={ '/newApply/' + record.apply_id }>申报</Link> : '' }
+      { record.state === 0 || record.state === 2 ? <Link to={ '/editApply/' + record.apply_id }>编辑</Link> : '' }
+      { record.state === 1 ? <div><Link to={ '/editApply/' + record.apply_id }>编辑</Link>
         <Divider type="vertical"/>
-        <Link to={'/newApply/' + record.apply_id}>重新申请</Link>
+        <Link to={ '/newApply/' + record.apply_id }>重新申请</Link>
       </div> : '' }
-      { record.state === 3 || record.state === 4 ? <Link to={'/applyDetail/' + record.apply_id}>查看</Link>  : '' }
+      { record.state === 3 || record.state === 4 ? <Link to={ '/applyDetail/' + record.apply_id }>查看</Link> : '' }
     </span>
   ),
-}]
-
-const applyList = [{
-  apply_id: '1',
-  organization: '蓝鲸产品中心',
-  apply_award: '季度之星',
-  award_state: '生效中',
-  apply_info: '黄树华',
-  state: -1,
-  apply_time: '2014-12-31 18:20:1',
-}, {
-  apply_id: '1',
-  organization: '蓝鲸产品中心',
-  apply_award: '季度之星',
-  award_state: '生效中',
-  apply_info: '黄树华',
-  state: 0,
-  apply_time: '2014-12-31 18:20:1',
-}, {
-  apply_id: '1',
-  organization: '蓝鲸产品中心',
-  apply_award: '季度之星',
-  award_state: '生效中',
-  apply_info: '黄树华',
-  state: 1,
-  apply_time: '2014-12-31 18:20:1',
-}, {
-  apply_id: '1',
-  organization: '蓝鲸产品中心',
-  apply_award: '季度之星',
-  award_state: '生效中',
-  apply_info: '黄树华',
-  state: 2,
-  apply_time: '2014-12-31 18:20:1',
-}, {
-  apply_id: '1',
-  organization: '蓝鲸产品中心',
-  apply_award: '季度之星',
-  award_state: '生效中',
-  apply_info: '黄树华',
-  state: 3,
-  apply_time: '2014-12-31 18:20:1',
-}, {
-  apply_id: '1',
-  organization: '蓝鲸产品中心',
-  apply_award: '季度之星',
-  award_state: '生效中',
-  apply_info: '黄树华',
-  state: 4,
-  apply_time: '2014-12-31 18:20:1',
 }]
 
 class Apply extends Component {
@@ -132,7 +82,7 @@ class Apply extends Component {
 
     return (
       <div className='apply-background'>
-        <Breadcrumb style={{marginBottom:40}}>
+        <Breadcrumb style={ {marginBottom: 40} }>
           <Breadcrumb.Item>Home</Breadcrumb.Item>
           <Breadcrumb.Item>
             <a href="">个人中心</a>
@@ -180,9 +130,13 @@ class Apply extends Component {
             </Button>
           </Form.Item>
         </Form>
-        <Table columns={ columns } dataSource={ applyList } style={ {marginTop: '30px'} }/>
+        <Table columns={ columns } dataSource={ this.props.applyList } style={ {marginTop: '30px'} }/>
       </div>
     );
+  }
+
+  componentDidMount() {
+    this.props.getAwardList()
   }
 
   onClickSearchApplyState() {
@@ -191,8 +145,15 @@ class Apply extends Component {
   }
 }
 
-const mapState = (state) => ({})
+const mapState = (state) => ({
+  applyList: state.apply.applyList
+})
 
-const mapDispatch = (dispatch) => ({})
+const mapDispatch = (dispatch) => ({
+  getAwardList() {
+    const action = actionCreators.getAwardList()
+    dispatch(action)
+  }
+})
 
 export default connect(mapState, mapDispatch)(Apply);
