@@ -106,15 +106,15 @@ class Home extends Component {
       awardList: [{
         award_id: 1,
         img: awardList1,
-        award_title: "运营安全组2017年Q3季度奖评选"
-      },{
+        award_title: '运营安全组2017年Q3季度奖评选'
+      }, {
         award_id: 1,
         img: awardList2,
-        award_title: "运营安全组2017年Q3季度奖评选"
-      },{
+        award_title: '运营安全组2017年Q3季度奖评选'
+      }, {
         award_id: 1,
         img: awardList3,
-        award_title: "运营安全组2017年Q3季度奖评选"
+        award_title: '运营安全组2017年Q3季度奖评选'
       }],
       searchCurrentApplyState: 1,
     }
@@ -130,12 +130,12 @@ class Home extends Component {
           当前可申报奖项
         </div>
         <div className='currentAward'>
-          {this.state.awardList.map((item) => (
+          { this.state.awardList.map((item) => (
             <div className='awardList'>
-              <img className='awardImg' src={ item.img} alt=''/>
-              <p>{item.award_title}</p>
+              <img className='awardImg' src={ item.img } alt=''/>
+              <p>{ item.award_title }</p>
             </div>
-          ))}
+          )) }
         </div>
         <div className='title'>
           上次获奖人名单
@@ -146,7 +146,7 @@ class Home extends Component {
   }
 
   componentDidMount() {
-
+    this.props.changeUserPer
   }
 
   onClickSearchApplyState() {
@@ -159,7 +159,8 @@ const mapState = (state) => ({})
 
 const mapDispatch = (dispatch) => ({
   changeUserPer() {
-
+    const action = actionCreators.changeUserPer()
+    dispatch(action)
   }
 })
 
