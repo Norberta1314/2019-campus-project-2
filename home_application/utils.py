@@ -125,8 +125,11 @@ def get_my_apply(self, user_qq, apply_Q_list, sql_where_list):
         'select `awards`.id from `awards` join `organizations` o on `awards`.`organization_id` = `o`.`id` join `home_application_organizationsuser` `hao` on `o`.`id` = `hao`.`organization_id` where `hao`.`type` = \'0\' and o.soft_del = 0 and `hao`.`user` = %s',
         [user_qq])
     awards = [str(item.id) for item in awards]
-    awards = ','.join(awards)
-    awards = ' `awards`.`id` in (' + awards + ') '
+    if len(awards) > 0:
+        awards = ','.join(awards)
+        awards = '  `awards`.`id` in (' + awards + ') and '
+    else:
+        awards = ''
     # if len(apply_Q_list) > 0:
     #     applys = MyApply.objects.filter(
     #         reduce(
@@ -140,14 +143,14 @@ def get_my_apply(self, user_qq, apply_Q_list, sql_where_list):
             'select `awards`.`id`,`awards`.id as award_id, `my_applys`.id as apply_id, `my_applys`.`apply_info`, `o`.`name`, `awards`.`name` as apply_award, `awards`.`is_active` as award_state, `my_applys`.`state`, `my_applys`.`apply_time` from `awards` left join `my_applys` on `awards`.`id` = `my_applys`.`award_id` join organizations o on awards.organization_id = o.id' +
             sql_where_list +
             awards +
-            ' and awards.soft_del = 0  order by award_id desc',
+            ' `awards`.`soft_del` = 0  order by award_id desc',
             apply_Q_list)
     else:
         applys = MyApply.objects.raw(
             'select `awards`.`id`,`awards`.id as award_id, `my_applys`.id as apply_id, `my_applys`.`apply_info`, `o`.`name`, `awards`.`name` as apply_award, `awards`.`is_active` as award_state, `my_applys`.`state`, `my_applys`.`apply_time` from `awards` left join `my_applys` on `awards`.`id` = `my_applys`.`award_id` join organizations o on awards.organization_id = o.id' +
             sql_where_list +
             awards +
-            ' and awards.soft_del = 0 order by award_id desc')
+            ' `awards`.`soft_del` = 0 order by award_id desc')
     ret = []
     for item in applys:
         ret.append({

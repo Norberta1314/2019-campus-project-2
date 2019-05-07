@@ -29,25 +29,7 @@
 <body>
     <div>
         <!--顶部导航 Start-->
-        <nav class="navbar navbar-default king-horizontal-nav2" role="navigation">
-            <div class="container" style="width: 100%;">
-                <div class="navbar-header col-md-4 col-sm-4 col-xs-4 logo">
-                </div>
-                <div class="collapse navbar-collapse navbar-responsive-collapse" id="king-example-navbar-collapse-2">
 
-                    <ul class="nav navbar-nav navbar-right">
-                        <a href="###" style="color: #898989;font-size:14px;line-height: 48px;padding: 0 15px;">
-                            <img src="${AVATAR}"  onerror="javascript:this.src='${STATIC_URL}images/getheadimg.jpg';" width="40" alt="Avatar" style="border-radius:50%;margin-right:10px;">
-                            <span>${NICK}</span>
-                        </a>
-                        <!--     退出登录，正式环境下该方法无效             -->
-                        % if RUN_MODE != 'PRODUCT':
-                            <a id="logout" href="###" onclick="bk_app.logout('${LOGOUT_URL}')">退出</a>
-                        % endif
-                    </ul>
-                </div>
-            </div>
-        </nav>
         <!--顶部导航 End-->
     </div>
     <!-- 固定宽度居中 start -->
