@@ -1,6 +1,7 @@
 import fetch from 'dva/fetch';
 import { notification } from 'antd';
 import { get } from './cookie'
+import * as router from 'react-router-redux';
 // import router from 'umi/router';
 
 const codeMessage = {

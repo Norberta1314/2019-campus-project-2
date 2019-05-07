@@ -1,0 +1,31 @@
+.home-background {
+  margin: 20px auto 0 auto;
+  width: 1000px;
+
+  .form-title {
+    display: inline-block;
+  }
+
+  .title {
+    width: 100%;
+    font-size: 20px;
+    border-bottom: solid 1px #888;
+    padding-bottom: 10px;
+    padding-left: 20px;
+  }
+
+  .currentAward {
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: center;
+
+    .awardList {
+      margin: 20px 0 20px 0 ;
+      width: 100px;
+    }
+    .awardImg {
+      width: 100px;
+    }
+  }
+}
