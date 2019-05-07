@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import connect from 'react-redux/es/connect/connect';
 import { Divider, Table } from 'antd';
 import './style.scss'
+import { Link } from 'react-router-dom';
 
 let stateList = [ '申报中', '未通过', '已通过', '未获奖', '已获奖']
 const columns = [{
@@ -44,7 +45,7 @@ const columns = [{
         <Divider type="vertical"/>
         <a href="javascript:;">驳回</a>
       </div> : '' }
-      { record.state === 2 ? <a href="javascript:;">评奖</a> : '' }
+      { record.state === 2 ? <Link to={'/checkDetail/' + record.apply_id}>评奖</Link> : '' }
     </span>
   ),
 }]

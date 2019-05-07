@@ -3,6 +3,7 @@ import { connect } from 'react-redux';
 import {
   Form, Button, Input, Dropdown, Menu, Icon, DatePicker, Table, Divider
 } from 'antd'
+import { Link } from 'react-router-dom';
 import './style.scss'
 import 'antd/dist/antd.css';
 import * as actionCreators from './store/actionCreators'
@@ -47,13 +48,13 @@ const columns = [{
   key: 'action',
   render: (text, record) => (
     <span>
-      { record.state === -1 ? <a href="javascript:;">申报</a> : '' }
-      { record.state === 0 || record.state === 2 ? <a href="javascript:;">编辑</a> : '' }
-      { record.state === 1 ? <div><a href="javascript:;">编辑</a>
+      { record.state === -1 ? <Link to={'/newApply/' + record.apply_id}>申报</Link> : '' }
+      { record.state === 0 || record.state === 2 ? <Link to={'/editApply/' + record.apply_id}>编辑</Link> : '' }
+      { record.state === 1 ? <div><Link to={'/editApply/' + record.apply_id}>编辑</Link>
         <Divider type="vertical"/>
-        <a href="javascript:;">重新申请</a>
+        <Link to={'/newApply/' + record.apply_id}>重新申请</Link>
       </div> : '' }
-      { record.state === 3 || record.state === 4 ? <a href="javascript:;">查看</a> : '' }
+      { record.state === 3 || record.state === 4 ? <Link to={'/applyDetail/' + record.apply_id}>查看</Link>  : '' }
     </span>
   ),
 }]
@@ -158,7 +159,7 @@ class Apply extends Component {
             label="申报时间"
             style={ {marginLeft: '20px'} }
           >
-            <RangePicker/>
+            <RangePicker showTime format="YYYY-MM-DD HH:mm:ss" />
           </Form.Item>
           <Form.Item>
             <Button
