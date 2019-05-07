@@ -12,6 +12,11 @@ function mapStateToProps(state) {
 }
 
 class Header extends Component {
+  constructor(props) {
+    super(props)
+
+  }
+
   render() {
     return (
       <div className="header-background">
@@ -23,7 +28,7 @@ class Header extends Component {
         </Link>
         <div className='content'>
           <div className='manage content-box'>
-            <Dropdown overlay={() =>
+            <Dropdown overlay={ () =>
               <Menu>
                 <Menu.Item>
                   <Link to='/organization'>
@@ -38,7 +43,7 @@ class Header extends Component {
               </Menu>
             }>
               <a className="ant-dropdown-link" href="#">
-                系统管理 <Icon type="down" />
+                系统管理 <Icon type="down"/>
               </a>
             </Dropdown>
           </div>
@@ -56,9 +61,10 @@ class Header extends Component {
         </div>
 
         <div className='userinfo'>
-          <img className='avatar' src={ avatar } alt=''/>
+          <img className='avatar' src={ this.props.user.avatar } alt=''/>
           <div className='nickname'>
-            norberta
+            {/*norberta*/}
+            {this.props.user.nick}
           </div>
         </div>
 
@@ -67,6 +73,12 @@ class Header extends Component {
   }
 }
 
+const mapState = (state) => ({
+  user: state.home.user
+})
+
+const mapDispatch = (dispatch) => ({})
+
 export default connect(
-  mapStateToProps,
+  mapState, mapDispatch
 )(Header);

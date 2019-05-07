@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
-  Form, Button, Input, Dropdown, Menu, Icon, DatePicker, Table, Divider
+  Form, Button, Input, Dropdown, Menu, Icon, DatePicker, Table, Divider, Breadcrumb
 } from 'antd'
 import './style.scss'
 import 'antd/dist/antd.css';
@@ -145,6 +145,16 @@ class Award extends Component {
 
     return (
       <div className='award-background'>
+        <Breadcrumb style={{marginBottom:40}}>
+          <Breadcrumb.Item>Home</Breadcrumb.Item>
+          <Breadcrumb.Item>
+            <a href="">系统管理</a>
+          </Breadcrumb.Item>
+          <Breadcrumb.Item>
+            <a href="">组织管理</a>
+          </Breadcrumb.Item>
+        </Breadcrumb>
+
         <Form layout='inline'>
           <Form.Item>
             <Button>批量克隆</Button>
