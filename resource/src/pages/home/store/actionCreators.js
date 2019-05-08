@@ -7,7 +7,7 @@ export const addUser = (user) => ({
 })
 export const changeUserPer = () => {
   return async (dispatch) => {
-    const user = await request('/user')
+    const user = await request('user')
     console.log("actionCreators")
     console.log(user)
     const action = addUser(user)

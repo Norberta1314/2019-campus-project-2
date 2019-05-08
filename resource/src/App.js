@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import { Provider } from 'react-redux';
-import { BrowserRouter, Route } from 'react-router-dom';
+import {BrowserRouter, HashRouter, Route} from 'react-router-dom';
 import store from './store'
 import Home from './pages/home'
 import Header from './common/header'
@@ -19,10 +19,10 @@ class App extends Component {
   render() {
     return (
       <Provider store={ store }>
-        <BrowserRouter>
+        <HashRouter>
           <div>
             <Header/>
-            <Route path='/home' component={ Home }/>
+            <Route path='/' exact component={ Home }/>
             <Route path='/apply' exact component={ Apply }/>
             <Route path='/check' exact component={ Check }/>
             <Route path='/organization' exact component={ Organization }/>
@@ -32,7 +32,7 @@ class App extends Component {
             <Route path='/newApply/:award_id' exact component={ NewApply }/>
             <Route path='/checkDetail/:award_id' exact component={ checkDetail }/>
           </div>
-        </BrowserRouter>
+        </HashRouter>
 
       </Provider>
     )

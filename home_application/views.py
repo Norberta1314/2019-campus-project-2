@@ -703,6 +703,7 @@ def awards_clone(request):
 """
 
 
+@login_exempt
 @require_GET
 def my_applys(request):
     """
