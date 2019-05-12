@@ -288,8 +288,10 @@ class Organization extends Component {
     componentWillMount() {
         this.openSpin()
         const {changePage} = this.props
-        changePage()
-        this.closeSpin()
+        changePage(1, () => {
+            this.closeSpin()
+
+        })
     }
 
 
@@ -439,8 +441,8 @@ const mapState = (state) => ({
 })
 
 const mapDispatch = (dispatch) => ({
-    changePage(page = 1) {
-        const action = actionCreators.changePageData(page)
+    changePage(page = 1, cb) {
+        const action = actionCreators.changePageData(page, cb)
         dispatch(action)
     }
 })

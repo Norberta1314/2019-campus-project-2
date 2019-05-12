@@ -1,7 +1,7 @@
 import * as actionTypes from './actionTypes'
 import request from '../../../utils/request';
 import {queryUserInfo} from "../../../services/user";
-import {queryIndexHis} from "../../../services/api";
+import {queryIndexApplys, queryIndexHis} from "../../../services/api";
 
 export const addUser = (user) => ({
   type: actionTypes.ADD_USER,
@@ -36,3 +36,18 @@ export const changePage = (page) => {
     dispatch(dataAction)
   }
 }
+
+
+export const addApplys = (applys) => ({
+  type: actionTypes.GET_APPLYS,
+  applys: applys
+})
+
+export const getApplys = () => {
+  return async (dispatch) => {
+    const result = await queryIndexApplys()
+    const action = addApplys(result.result)
+    dispatch(action)
+  }
+}
+

@@ -26,10 +26,11 @@ export const addApply = (detail) => ({
 })
 
 
-export const getApply = (id, type) => {
+export const getApply = (id, type, cb) => {
     return async (dispatch) => {
         const result = await queryApplyDetail(id)
         const action = addApply(Object.assign(result, {type: type}))
         dispatch(action)
+        if (cb) cb()
     }
 }

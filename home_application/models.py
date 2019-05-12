@@ -7,6 +7,7 @@ from __future__ import unicode_literals
 # import from lib
 import os
 
+from django.conf import settings
 from django.core.files.storage import DefaultStorage
 from django.utils import timezone
 from django.db import models, transaction
@@ -238,10 +239,10 @@ class Attachment(models.Model):
     class Meta:
         db_table = 'attachment'
 
-    def getFileUrl(path):
+    def getFileUrl(self, path):
         pre = os.environ.get('QINIU_BUCKET_DOMAIN', getattr(settings, 'QINIU_BUCKET_DOMAIN', None))
-        pre = 'https://%s' % pre
-        return '%s%s' % pre, path
+        pre = 'http://%s' % pre
+        return pre + path
 
     def to_json(self):
         return {

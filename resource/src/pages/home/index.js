@@ -137,13 +137,16 @@ class Home extends Component {
 
     render() {
         const {RangePicker} = DatePicker
-        const {total, lastData} = this.props
+        const {total, lastData, applys, currentPage} = this.props
         let pagination = {
             total: total,
             showTotal: (total) => `总共${total}获奖`,
             pageSize: 10,
             onChange: this.pageChange,
+            current: currentPage
         }
+
+
 
         return (
             <div className='home-background'>
@@ -151,7 +154,7 @@ class Home extends Component {
                     当前可申报奖项
                 </div>
                 <Row gutter={16}>
-                    {this.state.awardList.map((item, index) => {
+                    {applys.map((item, index) => {
                         if (index > 3) return
                         return (
 
@@ -159,13 +162,13 @@ class Home extends Component {
                                 <Card
                                     hoverable
                                     style={{width: 200}}
-                                    cover={<img alt={item.award_title}
+                                    cover={<img alt={item.apply_award}
                                                 src={awardList3}/>}
                                     actions={[<Button>申请</Button>]}
                                 >
                                     <Meta
                                         title={item.organization}
-                                        description={item.award_title}
+                                        description={item.apply_award}
                                     />
                                     <Meta
                                         description={'提报人数:' + item.count}
@@ -186,6 +189,7 @@ class Home extends Component {
     componentDidMount() {
         this.props.changePage()
         this.props.changeUserPer()
+        this.props.getApplys()
     }
 
 }
@@ -193,7 +197,8 @@ class Home extends Component {
 const mapState = (state) => ({
     lastData: state.home.lastData,
     total: state.home.count,
-    currentPage: state.home.currentPage
+    currentPage: state.home.currentPage,
+    applys: state.home.applys
 })
 
 const mapDispatch = (dispatch) => ({
@@ -203,6 +208,10 @@ const mapDispatch = (dispatch) => ({
     },
     changePage(page = 1) {
         const action = actionCreators.changePage(page)
+        dispatch(action)
+    },
+    getApplys() {
+        const action = actionCreators.getApplys()
         dispatch(action)
     }
 })

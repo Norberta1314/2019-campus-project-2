@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import {
-    Form, Button, Input, Dropdown, Menu, Icon, DatePicker, Table, Divider, Breadcrumb, Popconfirm
+    Form, Button, Input, Dropdown, Menu, Icon, DatePicker, Table, Divider, Breadcrumb, Popconfirm, Spin
 } from 'antd'
 import './style.scss'
 import 'antd/dist/antd.css';
@@ -16,64 +16,11 @@ let stateList = ['不限', '生效中', '已过期']
 let currentState = 0
 
 
-const applyList = [{
-    apply_id: '1',
-    organization: '蓝鲸产品中心',
-    level: 0,
-    apply_award: '季度之星',
-    is_active: true,
-    award_state: '生效中',
-    apply_time: '2014-12-31 18:20:1',
-    start_time: '2014-12-31 18:20:1',
-    apply_count: 10,
-    apply_award_count: 1
-}, {
-    apply_id: '1',
-    organization: '蓝鲸产品中心',
-    level: 0,
-    apply_award: '季度之星',
-    is_active: true,
-    award_state: '生效中',
-    apply_time: '2014-12-31 18:20:1',
-    start_time: '2014-12-31 18:20:1',
-    apply_count: 10,
-    apply_award_count: 1
-}, {
-    apply_id: '1',
-    organization: '蓝鲸产品中心',
-    level: 0,
-    apply_award: '季度之星',
-    is_active: true,
-    award_state: '生效中',
-    apply_time: '2014-12-31 18:20:1',
-    start_time: '2014-12-31 18:20:1',
-    apply_count: 10,
-    apply_award_count: 1
-}, {
-    apply_id: '1',
-    organization: '蓝鲸产品中心',
-    level: 0,
-    apply_award: '季度之星',
-    is_active: true,
-    award_state: '生效中',
-    apply_time: '2014-12-31 18:20:1',
-    start_time: '2014-12-31 18:20:1',
-    apply_count: 10,
-    apply_award_count: 1
-}, {
-    apply_id: '1',
-    organization: '蓝鲸产品中心',
-    level: 0,
-    apply_award: '季度之星',
-    is_active: true,
-    award_state: '生效中',
-    apply_time: '2014-12-31 18:20:1',
-    start_time: '2014-12-31 18:20:1',
-    apply_count: 10,
-    apply_award_count: 1
-}]
-
 class Award extends Component {
+    state = {
+        spin: false
+    }
+
     constructor(props) {
         super(props)
         this.state = {
@@ -149,8 +96,11 @@ class Award extends Component {
     }
 
     componentWillMount() {
+        this.openSpin()
         const {changePage} = this.props
-        changePage()
+        changePage(1, () => {
+            this.closeSpin()
+        })
     }
 
     async deleteAward(id) {
@@ -173,6 +123,19 @@ class Award extends Component {
     toCreate() {
         const {push} = this.props.history
         push('/editAward/')
+    }
+
+    openSpin() {
+        this.setState({
+            spin: true
+        })
+    }
+
+
+    closeSpin() {
+        this.setState({
+            spin: false
+        })
     }
 
     render() {
@@ -256,7 +219,10 @@ class Award extends Component {
                         </Button>
                     </Form.Item>
                 </Form>
-                <Table columns={this.columns} dataSource={data} style={{marginTop: '30px'}} pagination={pagination}/>
+                <Spin spinning={this.state.spin}>
+                    <Table columns={this.columns} dataSource={data} style={{marginTop: '30px'}}
+                           pagination={pagination}/>
+                </Spin>
             </div>
         );
     }
@@ -271,8 +237,8 @@ const mapState = (state) => ({
 })
 
 const mapDispatch = (dispatch) => ({
-    changePage(page = 1) {
-        const action = actionCreators.changePageData(page)
+    changePage(page = 1, cb) {
+        const action = actionCreators.changePageData(page, cb)
         dispatch(action)
     }
 })

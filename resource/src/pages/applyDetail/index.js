@@ -2,10 +2,10 @@ import React, {Component} from 'react';
 import connect from 'react-redux/es/connect/connect';
 import './style.scss'
 import AwardDetail from '../../common/awardDetail'
-import {Form, Steps, Input, Upload, Button, Icon, Breadcrumb, Table, Tag} from 'antd';
-import {levelEnum} from "../../utils/utils";
+import {Form, Steps, Input, Upload, Button, Icon, Breadcrumb, Table, Tag, Spin} from 'antd';
+import {levelEnum, stateEnum} from "../../utils/utils";
 import * as actionCreators from "./store/actionCreators";
-import {toApplyAward} from "../../services/api";
+import {toApplyAward, updateApply} from "../../services/api";
 import {baseURL} from "../../utils/request";
 import {get} from "../../utils/cookie";
 
@@ -18,6 +18,11 @@ const applyEnum = {
 
 //申报
 class applyDetail extends Component {
+
+
+    state = {
+        spin: false
+    }
 
     constructor(props) {
         super(props)
@@ -49,8 +54,20 @@ class applyDetail extends Component {
         }]
     }
 
+    openSpin() {
+        this.setState({
+            spin: true
+        })
+    }
+
+    closeSpin() {
+        this.setState({
+            spin: false
+        })
+    }
+
     componentWillMount() {
-        console.log(this.props)
+        this.openSpin()
         const {query} = this.props.location
         const {match} = this.props
         if (query.type === 'apply') {
@@ -58,7 +75,29 @@ class applyDetail extends Component {
         }
 
         if (query.type === 'edit') {
-            this.props.getDetail(match.params.id, 1)
+            this.props.getDetail(match.params.id, 1, () => {
+                const {apply} = this.props
+                let attachment = {}
+                if (apply.attachment !== -1) {
+                    attachment = {
+                        attachment_id: apply.attachment.attachment_id,
+                        uid: apply.attachment.attachment_id,
+                        name: apply.attachment.attachment_name,
+                        status: 'done',
+                        response: 'true', // custom error message to show
+                        url: apply.attachment.url,
+                    }
+                }
+
+                this.props.form.setFieldsValue({
+                    apply_info: apply.apply_info,
+                    apply_des: apply.apply_des,
+                    upload: apply.attachment !== -1 ? [attachment] : []
+                })
+                this.closeSpin()
+            })
+
+
         }
 
         if (query.type === 'detail') {
@@ -78,8 +117,13 @@ class applyDetail extends Component {
                     apply_info: values.apply_info,
                     apply_des: values.apply_des
                 }
-                console.log(data)
-                this.applyAward(data)
+                const {type} = this.props
+                if (type > 0) {
+                    this.updateAward(data)
+
+                } else {
+                    this.applyAward(data)
+                }
             }
 
 
@@ -92,6 +136,14 @@ class applyDetail extends Component {
         const {goBack} = this.props.history
         goBack()
 
+    }
+
+    updateAward(data, isreapply = false) {
+        const {match} = this.props
+        data = Object.assign(data, {is_reapply: isreapply})
+        updateApply({id: match.params.id, data: data})
+        const {goBack} = this.props.history
+        goBack()
     }
 
     normFile(e) {
@@ -116,7 +168,6 @@ class applyDetail extends Component {
         }
 
 
-
         const uploadProps = {
             action: baseURL + 'attachment',
             withCredentials: true,
@@ -132,11 +183,11 @@ class applyDetail extends Component {
             },
             defaultFileList: [],
         };
-        const {match, awardDetail, form} = this.props
+        const {match, awardDetail, form, apply, type} = this.props
 
         const {getFieldDecorator} = form;
 
-                const data = [{
+        const data = [{
             item: '奖项名称',
             detail: awardDetail.name
         }, {
@@ -175,59 +226,63 @@ class applyDetail extends Component {
                         <a href="">申报详情</a>
                     </Breadcrumb.Item>
                 </Breadcrumb>
-                <Table columns={this.columns_detail} dataSource={data} showHeader={false} style={{marginTop: '30px'}}
-                       pagination={false}/>
-                <Steps current={0} style={{marginTop: 40}}>
-                    <Steps.Step title="申报" description="开始申报"/>
-                    <Steps.Step title="审核"/>
-                    <Steps.Step title="评奖"/>
-                </Steps>
+                <Spin spinning={this.state.spin}>
+                    <Table columns={this.columns_detail} dataSource={data} showHeader={false}
+                           style={{marginTop: '30px'}}
+                           pagination={false}/>
+                    <Steps current={type} style={{marginTop: 40}}>
+                        <Steps.Step title="申报" description="开始申报"/>
+                        <Steps.Step title="审核"
+                                    description={apply.state >= 0 && apply.state < 4 ? stateEnum[apply.state] : ''}/>
+                        <Steps.Step title="评奖"/>
+                    </Steps>
 
-                <Form layout='horizontal' style={{marginTop: 40}}>
-                    <Form.Item
-                        {...formItemLayout}
-                        label='申报人/社团'>
-                        {getFieldDecorator('apply_info', {
-                            rules: [{required: true, message: '填写申报人/社团'}],
-                        })(
-                            <Input placeholder='填写申报人/社团'/>
-                        )}
-                    </Form.Item>
-                    <Form.Item
-                        {...formItemLayout}
-                        label='事迹介绍'>
-                        {getFieldDecorator('apply_des', {
-                            rules: [{required: true, message: '请填写事迹介绍'}],
-                        })(
-                            <Input.TextArea autosize={{minRows: 6, maxRows: 16}}/>)}
+                    <Form layout='horizontal' style={{marginTop: 40}}>
+                        <Form.Item
+                            {...formItemLayout}
+                            label='申报人/社团'>
+                            {getFieldDecorator('apply_info', {
+                                rules: [{required: true, message: '填写申报人/社团'}],
+                            })(
+                                <Input placeholder='填写申报人/社团'/>
+                            )}
+                        </Form.Item>
+                        <Form.Item
+                            {...formItemLayout}
+                            label='事迹介绍'>
+                            {getFieldDecorator('apply_des', {
+                                rules: [{required: true, message: '请填写事迹介绍'}],
+                            })(
+                                <Input.TextArea autosize={{minRows: 6, maxRows: 16}}/>)}
 
-                    </Form.Item>
-                    {
-                        awardDetail.have_attachment ? (
-                            <Form.Item
-                                labelCol={{span: 4}}
-                                label='附件'
-                            >
-                                {getFieldDecorator('upload', {
-                                    valuePropName: 'fileList',
-                                    getValueFromEvent: this.normFile,
-                                })(
-                                    <Upload {...uploadProps}>
-                                        <Button>
-                                            <Icon type="upload"/> 上传
-                                        </Button>
-                                    </Upload>)}
-                            </Form.Item>
-                        ) : ''
+                        </Form.Item>
+                        {
+                            awardDetail.have_attachment ? (
+                                <Form.Item
+                                    labelCol={{span: 4}}
+                                    label='附件'
+                                >
+                                    {getFieldDecorator('upload', {
+                                        valuePropName: 'fileList',
+                                        getValueFromEvent: this.normFile,
+                                    })(
+                                        <Upload {...uploadProps}>
+                                            <Button>
+                                                <Icon type="upload"/> 上传
+                                            </Button>
+                                        </Upload>)}
+                                </Form.Item>
+                            ) : ''
 
-                    }
+                        }
 
-                    <Form.Item style={{marginLeft: 450}}>
-                        <Button type="primary" style={{marginRight: 30}}
-                                onClick={() => this.handleSubmit()}>我要申报</Button>
-                        <Button type="primary" onClick={() => this.props.history.goBack()}>取消</Button>
-                    </Form.Item>
-                </Form>
+                        <Form.Item style={{marginLeft: 450}}>
+                            <Button type="primary" style={{marginRight: 30}}
+                                    onClick={() => this.handleSubmit()}>我要申报</Button>
+                            <Button type="primary" onClick={() => this.props.history.goBack()}>取消</Button>
+                        </Form.Item>
+                    </Form>
+                </Spin>
             </div>
         );
     }
@@ -241,8 +296,8 @@ const mapState = (state) => ({
 })
 
 const mapDispatch = (dispatch) => ({
-    getDetail(id, type) {
-        const action = actionCreators.getApply(id, type)
+    getDetail(id, type, cb) {
+        const action = actionCreators.getApply(id, type, cb)
         dispatch(action)
     },
 

@@ -10,6 +10,7 @@ const defaultState = {
     ]
   },
   lastData: [],
+  applys: [],
   currentPage: 1,
   count: 0
 }
@@ -29,6 +30,13 @@ export default (state = defaultState, action) => {
     const newState = deepClone(state)
     state.lastData = action.lastData
     state.count = action.count
+    return newState
+  }
+
+  if (action.type === actionTypes.GET_APPLYS) {
+    const newState = deepClone(state)
+    newState.applys = action.applys
+
     return newState
   }
   return state

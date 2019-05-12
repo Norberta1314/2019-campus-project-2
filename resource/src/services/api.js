@@ -109,3 +109,21 @@ export async function queryApplyWard(id) {
 export async function queryApplyDetail(id) {
     return request(`my/apply/${id}`)
 }
+
+
+export async function passApply(id) {
+    return request(`my/check/pass/${id}`, {
+        method: 'PUT'
+    })
+}
+
+export async function rejectApply(id) {
+    return request(`my/check/reject/${id}`, {
+        method: 'PUT'
+    })
+}
+
+
+export async function queryIndexApplys() {
+    return request(`index/applys`)
+}

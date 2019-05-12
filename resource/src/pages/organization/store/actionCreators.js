@@ -9,10 +9,11 @@ const changePage = (payload) => ({
     count: payload.counts
 })
 
-export const changePageData = (page) => {
+export const changePageData = (page, cb) => {
     return async (dispatch) => {
         const result = await queryOrganizations({page: page})
         const action = changePage(Object.assign(result, {page: page}))
         dispatch(action)
+        if (cb) cb()
     }
 }
