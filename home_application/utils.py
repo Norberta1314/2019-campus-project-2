@@ -2,14 +2,17 @@
 from __future__ import unicode_literals
 import json
 import operator
+import os
 import re
 
 from django import forms
+from django.conf import settings
 
 from common.pxfilter import XssHtml
 from common.utils import html_escape
-from home_application.models import MyApply, OrganizationsUser, Awards
 from functools import reduce
+
+from .models import OrganizationsUser, Awards, MyApply
 
 
 class InvalidData(Exception):
@@ -43,20 +46,20 @@ def valid_award(data):
         raise InvalidData(u'奖项名字不能为空')
 
     for k, v in data.items():
-        if v is '' or v is None:
+        if v == '' or v is None:
             raise InvalidData(u'不能为空')
 
     # 验证时xss富文本过滤
     parser = XssHtml()
-    parser.feed(data['content'])
-    parser.close()
-    data['content'] = parser.getHtml()
+    # parser.feed(data['content'])
+    # parser.close()
+    # data['content'] = parser.getHtml()
     data['name'] = html_escape(data['name'])
 
 
 def valid_apply(data):
     for k, v in data.items():
-        if v is '' or v is None:
+        if v == '' or v is None:
             raise InvalidData(u'不能为空')
 
     data = json.loads(html_escape(json.dumps(data), is_json=True))
@@ -64,7 +67,7 @@ def valid_apply(data):
 
 def valid_decide(data):
     for k, v in data.items():
-        if v is '' or v is None:
+        if v == '' or v is None:
             raise InvalidData(u'不能为空')
     data = json.loads(html_escape(json.dumps(data), is_json=True))
 
@@ -189,3 +192,7 @@ def get_my_check(self, user_qq):
             'op_user': user_qq if self.get_full_name() is '' else self.get_full_name()
         })
     return ret
+
+
+
+

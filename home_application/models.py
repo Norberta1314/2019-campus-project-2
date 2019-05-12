@@ -5,6 +5,8 @@ from __future__ import unicode_literals
 
 
 # import from lib
+import os
+
 from django.core.files.storage import DefaultStorage
 from django.utils import timezone
 from django.db import models, transaction
@@ -17,6 +19,7 @@ class OrganizationsManager(models.Manager):
     """
     启动事务 防止关联关系创建不成功 而组织已经插入
     """
+
     @transaction.atomic
     def create_organization(self, data, user):
         obj = self.create(name=data['name'], update_user=user)
@@ -37,7 +40,6 @@ class OrganizationsManager(models.Manager):
 
 
 class Organizations(models.Model):
-
     name = models.CharField(max_length=255, verbose_name='所属组织', unique=True)
     """
         josn 序列化不好查询和删除 改为映射表
@@ -201,6 +203,7 @@ class Awards(models.Model):
             'id': self.id,
             'name': self.name,
             'organization': self.organization.name,
+            'organization_id': self.organization.id,
             'content': self.content,
             'heads': heads,
             'level': self.level,
@@ -235,24 +238,27 @@ class Attachment(models.Model):
     class Meta:
         db_table = 'attachment'
 
+    def getFileUrl(path):
+        pre = os.environ.get('QINIU_BUCKET_DOMAIN', getattr(settings, 'QINIU_BUCKET_DOMAIN', None))
+        pre = 'https://%s' % pre
+        return '%s%s' % pre, path
+
     def to_json(self):
-        storage = DefaultStorage()
-        storage.open(self.path)
         return {
             'attachment_name': self.real_name,
-            'url': storage.url(),
+            'url': self.getFileUrl(self.path),
             'attachment_id': self.id
         }
 
 
 class MyApply(models.Model):
-
     award = models.ForeignKey(Awards, verbose_name='申请奖项')
     apply_info = models.CharField(max_length=255, verbose_name='申请人/团队')
     apply_des = models.TextField(verbose_name='事迹介绍')
     attachment = models.ForeignKey(
         Attachment,
         verbose_name='附件',
+        null=True,
         blank=True)
     STATE_CHOICES = (
         (u'0', u'申报中'),
@@ -284,7 +290,7 @@ class MyApply(models.Model):
                 'state': item.state,
                 'apply_time': item.apply_time.strftime("%Y-%m-%d %H:%M:%S"),
                 'apply_des': item.apply_des,
-                'attachment': item.attachment.to_json() if hasattr(item, 'attachment') else -1,
+                'attachment': item.attachment.to_json() if getattr(item, 'attachment') is not None else -1,
                 'remark': item.remark
             })
         return ret
@@ -317,9 +323,9 @@ class MyApply(models.Model):
         return {
             'myapply': {
                 'apply_info': self.apply_info,
-                'attachment': self.attachment.to_json() if hasattr(
+                'attachment': self.attachment.to_json() if getattr(
                     self,
-                    'attachment') else -1,
+                    'attachment') is not None else -1,
                 'apply_des': self.apply_des,
                 'state': self.state,
                 'remark': self.remark},

@@ -8,11 +8,12 @@ import operator
 from django.core.files.storage import DefaultStorage
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
 from django.db import transaction
-from django.db.models import Q
+from django.db.models import Q, F
 from django.http import JsonResponse, response, HttpResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.views.decorators.http import require_POST, require_GET, require_http_methods
 from django.views.generic import View
+from qiniustorage.backends import QiniuStorage
 
 from account.decorators import login_exempt
 from bkoauth.jwt_client import JWTClient
@@ -198,7 +199,7 @@ def organization_get_put_delete(request, organization_id):
 @require_GET
 def organizations(request):
     organization_all = Organizations.objects.filter(
-        soft_del=False).order_by('id').all()
+        soft_del=False).order_by('-id').all()
     paginator = Paginator(organization_all, 10)
     page = request.GET.get('page', 1)
     try:
@@ -357,12 +358,12 @@ def create_award(request):
 
         return HttpResponse(status=422)
 
-    try:
-        Awards.objects.create(**data)
-    except Exception as e:
-        logging.debug(u'%s' % e)
-
-        return HttpResponse(status=400)
+    # try:
+    Awards.objects.create(**data)
+    # except Exception as e:
+    #     logging.debug(u'%s' % e)
+    #
+    #     return HttpResponse(status=400)
 
     return HttpResponse(status=201)
 
@@ -766,7 +767,7 @@ def my_applys(request):
         {'counts': paginator.count, 'my_applys': my_applys.object_list})
 
 
-class MyApplyView(AdminRequire, View):
+class MyApplyView(View):
     http_method_names = ['get', 'put', 'post']
 
     def get(self, request, id):
@@ -803,6 +804,8 @@ class MyApplyView(AdminRequire, View):
 
 def apply_award(request, award_id):
     data = {}
+    if MyApply.objects.filter(award_id=award_id, user=request.user).exists():
+        return HttpResponse(status=400)
     try:
         data = json.loads(request.body)
         valid_apply(data)
@@ -845,6 +848,7 @@ def apply_award(request, award_id):
 """
 
 
+@login_exempt
 @require_POST
 def upload_attachment(request):
     # 限制上传附件小于 20M
@@ -1219,7 +1223,6 @@ def can_apply_list(request):
         {'counts': paginator.count, 'result': result.object_list})
 
 
-
 """
 @api {GET} /index/last
 @apiDescription 历史获奖
@@ -1250,7 +1253,16 @@ def last_award_list(request):
     ret = []
     for item in last_awards:
         ret.append(item.to_json())
-    return render_json(ret)
+    paginator = Paginator(ret, 10)
+    page = request.GET.get('page', 1)
+    try:
+        result = paginator.page(page)
+    except PageNotAnInteger:
+        result = paginator.page(1)
+    except EmptyPage:
+        result = paginator.page(paginator.count)
+    return render_json(
+        {'counts': paginator.count, 'result': result.object_list})
 
 
 """

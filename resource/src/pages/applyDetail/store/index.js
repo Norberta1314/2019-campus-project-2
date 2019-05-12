@@ -1,15 +1,5 @@
-import React, { Component } from 'react';
-import connect from 'react-redux/es/connect/connect';
-import './style.scss'
+import reducer from './reducer'
+import * as actionCreators from './actionCreators'
+import * as actionTypes from './actionTypes'
 
-class applyDetail extends Component {
-  render() {
-    return (
-      <div>
-
-      </div>
-    );
-  }
-}
-
-export default applyDetail;
+export { reducer, actionCreators, actionTypes };

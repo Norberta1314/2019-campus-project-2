@@ -1,228 +1,279 @@
-import React, { Component } from 'react';
-import { connect } from 'react-redux';
+import React, {Component} from 'react';
+import {connect} from 'react-redux';
 import {
-  Form, Button, Input, Dropdown, Menu, Icon, DatePicker, Table, Divider, Breadcrumb
+    Form, Button, Input, Dropdown, Menu, Icon, DatePicker, Table, Divider, Breadcrumb, Popconfirm
 } from 'antd'
 import './style.scss'
 import 'antd/dist/antd.css';
+import * as actionCreators from "./store/actionCreators";
+import {dAward} from "../../services/api";
+import {levelEnum} from "../../utils/utils";
 
 const onClickSearchApplyState = ({key}) => {
 
 }
 let stateList = ['不限', '生效中', '已过期']
 let currentState = 0
-const columns = [{
-  title: '所属单位',
-  dataIndex: 'organization',
-  key: 'organization',
-  render: text => <a href="javascript:;">{ text }</a>,
-}, {
-  title: '所属级别',
-  dataIndex: 'level',
-  key: 'level',
-  render: (level) => (
-    <span>
-      { level === 0 ? <div>中心级</div> : <div>部门级</div> }
-    </span>
-  )
-}, {
-  title: '申报奖项',
-  dataIndex: 'apply_award',
-  key: 'apply_award',
-}, {
-  title: '状态',
-  dataIndex: 'is_active',
-  key: 'is_active',
-  render: (is_active) => (
-    <span>
-      {is_active? <div>开启</div>:<div>结束</div>}
-    </span>
-  )
-}, {
-  title: '开始时间',
-  dataIndex: 'start_time',
-  key: 'start_time'
-}, {
-  title: '申报时间',
-  dataIndex: 'apply_time',
-  key: 'apply_time'
-}, {
-  title: '申报人数',
-  dataIndex: 'apply_count',
-  key: 'apply_count'
-}, {
-  title: '获奖人数',
-  dataIndex: 'apply_award_count',
-  key: 'apply_award_count'
-}, {
-  title: '操作',
-  key: 'action',
-  render: () => (
-    <span>
-      <a href="javascript:;">查看</a>
-      <Divider type="vertical"/>
-      <a href="javascript:;">克隆</a>
-      <Divider type="vertical"/>
-      <a href="javascript:;">编辑</a>
-      <Divider type="vertical"/>
-      <a href="javascript:;">删除</a>
-    </span>
-  ),
-}]
+
 
 const applyList = [{
-  apply_id: '1',
-  organization: '蓝鲸产品中心',
-  level:0,
-  apply_award: '季度之星',
-  is_active: true,
-  award_state: '生效中',
-  apply_time: '2014-12-31 18:20:1',
-  start_time: '2014-12-31 18:20:1',
-  apply_count: 10,
-  apply_award_count: 1
+    apply_id: '1',
+    organization: '蓝鲸产品中心',
+    level: 0,
+    apply_award: '季度之星',
+    is_active: true,
+    award_state: '生效中',
+    apply_time: '2014-12-31 18:20:1',
+    start_time: '2014-12-31 18:20:1',
+    apply_count: 10,
+    apply_award_count: 1
 }, {
-  apply_id: '1',
-  organization: '蓝鲸产品中心',
-  level:0,
-  apply_award: '季度之星',
-  is_active: true,
-  award_state: '生效中',
-  apply_time: '2014-12-31 18:20:1',
-  start_time: '2014-12-31 18:20:1',
-  apply_count: 10,
-  apply_award_count: 1
-},{
-  apply_id: '1',
-  organization: '蓝鲸产品中心',
-  level:0,
-  apply_award: '季度之星',
-  is_active: true,
-  award_state: '生效中',
-  apply_time: '2014-12-31 18:20:1',
-  start_time: '2014-12-31 18:20:1',
-  apply_count: 10,
-  apply_award_count: 1
-},{
-  apply_id: '1',
-  organization: '蓝鲸产品中心',
-  level:0,
-  apply_award: '季度之星',
-  is_active: true,
-  award_state: '生效中',
-  apply_time: '2014-12-31 18:20:1',
-  start_time: '2014-12-31 18:20:1',
-  apply_count: 10,
-  apply_award_count: 1
-},{
-  apply_id: '1',
-  organization: '蓝鲸产品中心',
-  level:0,
-  apply_award: '季度之星',
-  is_active: true,
-  award_state: '生效中',
-  apply_time: '2014-12-31 18:20:1',
-  start_time: '2014-12-31 18:20:1',
-  apply_count: 10,
-  apply_award_count: 1
+    apply_id: '1',
+    organization: '蓝鲸产品中心',
+    level: 0,
+    apply_award: '季度之星',
+    is_active: true,
+    award_state: '生效中',
+    apply_time: '2014-12-31 18:20:1',
+    start_time: '2014-12-31 18:20:1',
+    apply_count: 10,
+    apply_award_count: 1
+}, {
+    apply_id: '1',
+    organization: '蓝鲸产品中心',
+    level: 0,
+    apply_award: '季度之星',
+    is_active: true,
+    award_state: '生效中',
+    apply_time: '2014-12-31 18:20:1',
+    start_time: '2014-12-31 18:20:1',
+    apply_count: 10,
+    apply_award_count: 1
+}, {
+    apply_id: '1',
+    organization: '蓝鲸产品中心',
+    level: 0,
+    apply_award: '季度之星',
+    is_active: true,
+    award_state: '生效中',
+    apply_time: '2014-12-31 18:20:1',
+    start_time: '2014-12-31 18:20:1',
+    apply_count: 10,
+    apply_award_count: 1
+}, {
+    apply_id: '1',
+    organization: '蓝鲸产品中心',
+    level: 0,
+    apply_award: '季度之星',
+    is_active: true,
+    award_state: '生效中',
+    apply_time: '2014-12-31 18:20:1',
+    start_time: '2014-12-31 18:20:1',
+    apply_count: 10,
+    apply_award_count: 1
 }]
 
 class Award extends Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      ApplyState: [
-        {key: 1, applyName: '生效中'},
-        {key: 2, applyName: '已过期'},
-      ],
-      searchCurrentApplyState: 1,
+    constructor(props) {
+        super(props)
+        this.state = {
+            ApplyState: [
+                {key: 1, applyName: '生效中'},
+                {key: 2, applyName: '已过期'},
+            ],
+            searchCurrentApplyState: 1,
+        }
+        this.toCreate = this.toCreate.bind(this)
+        this.columns = [{
+            title: '所属单位',
+            dataIndex: 'organization',
+            key: 'organization',
+            render: text => <a href="javascript:;">{text}</a>,
+        }, {
+            title: '所属级别',
+            dataIndex: 'level',
+            key: 'level',
+            render: (level) => (
+                <span>
+      {levelEnum[level]}
+    </span>
+            )
+        }, {
+            title: '申报奖项',
+            dataIndex: 'name',
+            key: 'name',
+        }, {
+            title: '状态',
+            dataIndex: 'is_active',
+            key: 'is_active',
+            render: (is_active) => (
+                <span>
+      {is_active ? <div>开启</div> : <div>结束</div>}
+    </span>
+            )
+        }, {
+            title: '开始时间',
+            dataIndex: 'start_time',
+            key: 'start_time'
+        }, {
+            title: '结束时间',
+            dataIndex: 'end_time',
+            key: 'end_time'
+        }, {
+            title: '申报人数',
+            dataIndex: 'apply_count',
+            key: 'apply_count'
+        }, {
+            title: '获奖人数',
+            dataIndex: 'apply_award_count',
+            key: 'apply_award_count'
+        }, {
+            title: '操作',
+            key: 'action',
+            render: (_, record) => (
+                <span>
+      <a href="javascript:;" onClick={() => this.detail(record.id)}>查看</a>
+      <Divider type="vertical"/>
+      <a href="javascript:;">克隆</a>
+      <Divider type="vertical"/>
+      <a href="javascript:;" onClick={() => this.edit(record.id)}>编辑</a>
+      <Divider type="vertical"/>
+      <Popconfirm title="你确定要删除这个奖项嘛？" okText="删除" cancelText="取消"
+                  onConfirm={() => this.deleteAward(record.id)}>
+          <a href="javascript:;">删除</a>
+      </Popconfirm>
+
+    </span>
+            ),
+        }]
     }
-    this.onClickSearchApplyState = this.onClickSearchApplyState.bind(this)
-  }
 
-  render() {
-    const {RangePicker} = DatePicker
+    componentWillMount() {
+        const {changePage} = this.props
+        changePage()
+    }
 
-    return (
-      <div className='award-background'>
-        <Breadcrumb style={{marginBottom:40}}>
-          <Breadcrumb.Item>Home</Breadcrumb.Item>
-          <Breadcrumb.Item>
-            <a href="">系统管理</a>
-          </Breadcrumb.Item>
-          <Breadcrumb.Item>
-            <a href="">组织管理</a>
-          </Breadcrumb.Item>
-        </Breadcrumb>
+    async deleteAward(id) {
+        await dAward(id)
+        const {changePage} = this.props
+        changePage()
+    }
 
-        <Form layout='inline'>
-          <Form.Item>
-            <Button>批量克隆</Button>
-          </Form.Item>
-          <Form.Item>
-          <Button>新增</Button>
-        </Form.Item>
-        </Form>
-        <Form layout="inline">
-          <Form.Item
-            label="申报奖项">
-            <Input
-              type="text"
-              size='small'
-              style={ {width: '80%', marginRight: '3%'} }
-            />
-          </Form.Item>
-          <Form.Item
-            label="所属组织">
-            <Input
-              type="text"
-              size='small'
-              style={ {width: '80%', marginRight: '3%'} }
-            />
-          </Form.Item>
-          <Form.Item
-            label="审核状态">
-            <Dropdown overlay={ () =>
-              <Menu onClick={ onClickSearchApplyState }>
-                { this.state.ApplyState.map((item) =>
-                  <Menu.Item key={ item.key } onClick={ onClickSearchApplyState }>{ item.applyName }</Menu.Item>
-                ) }
-              </Menu>
-            }>
-              <a className="ant-dropdown-link" href="#">
-                { this.state.ApplyState[this.state.searchCurrentApplyState].applyName } <Icon type="down"/>
-              </a>
-            </Dropdown>
-          </Form.Item>
-          <Form.Item
-            label="申报时间"
-            style={ {marginLeft: '20px'} }
-          >
-            <RangePicker />
-          </Form.Item>
-          <Form.Item>
-            <Button
-              type="primary"
-              htmlType="submit"
-              style={ {marginLeft: '20px'} }
-            >
-              查询
-            </Button>
-          </Form.Item>
-        </Form>
-        <Table columns={ columns } dataSource={ applyList } style={ {marginTop: '30px'} }/>
-      </div>
-    );
-  }
+    edit(id) {
+        const {push} = this.props.history
+        push(`/editAward/${id}`)
+    }
 
-  onClickSearchApplyState() {
-    console.log('123')
-    // console.log(key)
-  }
+
+    detail(id) {
+        const {push} = this.props.history
+        push(`/award/${id}`)
+    }
+
+    toCreate() {
+        const {push} = this.props.history
+        push('/editAward/')
+    }
+
+    render() {
+        const {RangePicker} = DatePicker
+        const {total, data, currentPage} = this.props
+        console.log(data)
+
+        let pagination = {
+            total: total,
+            showTotal: (total) => `总共${total}个组织`,
+            pageSize: 10,
+            onChange: this.pageChange,
+            current: currentPage
+        }
+        return (
+            <div className='award-background'>
+                <Breadcrumb style={{marginBottom: 40}}>
+                    <Breadcrumb.Item>Home</Breadcrumb.Item>
+                    <Breadcrumb.Item>
+                        <a href="">系统管理</a>
+                    </Breadcrumb.Item>
+                    <Breadcrumb.Item>
+                        <a href="">组织管理</a>
+                    </Breadcrumb.Item>
+                </Breadcrumb>
+
+                <Form layout='inline'>
+                    <Form.Item>
+                        <Button>批量克隆</Button>
+                    </Form.Item>
+                    <Form.Item>
+                        <Button onClick={() => this.toCreate()}>新增</Button>
+                    </Form.Item>
+                </Form>
+                <Form layout="inline">
+                    <Form.Item
+                        label="申报奖项">
+                        <Input
+                            type="text"
+                            size='small'
+                            style={{width: '80%', marginRight: '3%'}}
+                        />
+                    </Form.Item>
+                    <Form.Item
+                        label="所属组织">
+                        <Input
+                            type="text"
+                            size='small'
+                            style={{width: '80%', marginRight: '3%'}}
+                        />
+                    </Form.Item>
+                    <Form.Item
+                        label="审核状态">
+                        <Dropdown overlay={() =>
+                            <Menu onClick={onClickSearchApplyState}>
+                                {this.state.ApplyState.map((item) =>
+                                    <Menu.Item key={item.key}
+                                               onClick={onClickSearchApplyState}>{item.applyName}</Menu.Item>
+                                )}
+                            </Menu>
+                        }>
+                            <a className="ant-dropdown-link" href="#">
+                                {this.state.ApplyState[this.state.searchCurrentApplyState].applyName} <Icon
+                                type="down"/>
+                            </a>
+                        </Dropdown>
+                    </Form.Item>
+                    <Form.Item
+                        label="申报时间"
+                        style={{marginLeft: '20px'}}
+                    >
+                        <RangePicker/>
+                    </Form.Item>
+                    <Form.Item>
+                        <Button
+                            type="primary"
+                            htmlType="submit"
+                            style={{marginLeft: '20px'}}
+                        >
+                            查询
+                        </Button>
+                    </Form.Item>
+                </Form>
+                <Table columns={this.columns} dataSource={data} style={{marginTop: '30px'}} pagination={pagination}/>
+            </div>
+        );
+    }
+
+
 }
 
-const mapState = (state) => ({})
+const mapState = (state) => ({
+    data: state.award.data,
+    total: state.award.count,
+    currentPage: state.award.currentPage
+})
 
-const mapDispatch = (dispatch) => ({})
-
+const mapDispatch = (dispatch) => ({
+    changePage(page = 1) {
+        const action = actionCreators.changePageData(page)
+        dispatch(action)
+    }
+})
 export default connect(mapState, mapDispatch)(Award);

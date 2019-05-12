@@ -17,6 +17,16 @@ class Header extends Component {
 
   }
 
+  isHead() {
+      let perm = this.props.user.permission
+      return Array.isArray(perm) ? perm.indexOf('head') > -1 : false
+  }
+
+  isAdmin() {
+      let perm = this.props.user.permission
+      return Array.isArray(perm) ? perm.indexOf('admin') > -1 : false
+  }
+
   render() {
     return (
       <div className="header-background">
@@ -28,7 +38,7 @@ class Header extends Component {
         </Link>
         <div className='content'>
           {
-            'admin' in this.props.user.permission ? (<div className='manage content-box'>
+            this.isAdmin() ? (<div className='manage content-box'>
               <Dropdown overlay={ () =>
                 <Menu>
 
@@ -52,7 +62,7 @@ class Header extends Component {
           }
 
           {
-            'head' in this.props.user.permission ? (<div className='check content-box'>
+            this.isHead()  ? (<div className='check content-box'>
               <Link to='/check'>
                 我的审核
               </Link>

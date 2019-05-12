@@ -14,18 +14,5 @@
     padding-left: 20px;
   }
 
-  .currentAward {
-    display: flex;
-    flex-direction: row;
-    justify-content: space-around;
-    align-items: center;
 
-    .awardList {
-      margin: 20px 0 20px 0 ;
-      width: 100px;
-    }
-    .awardImg {
-      width: 100px;
-    }
-  }
 }

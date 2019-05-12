@@ -1,15 +1,19 @@
 import * as actionTypes from './actionTypes'
 import request from '../../../utils/request';
+import {queryMyApplys} from "../../../services/api";
 
-export const addAwardList = (awardList) => ({
+export const addAwardList = (payload) => ({
   type: actionTypes.ADD_AWARD_LIST,
-  awardList: awardList
+  applyList: payload.my_applys,
+  count: payload.counts,
+  currentPage: payload.page
+
 })
 
-export const getAwardList = () => {
+export const getAwardList = (page) => {
   return async (dispatch) => {
-    const awardList = await request('my/applys')
-    const action = addAwardList(awardList)
+    const applyList = await queryMyApplys({page: page})
+    const action = addAwardList(Object.assign(applyList, {page: page}))
     dispatch(action)
   }
 }

@@ -23,10 +23,11 @@ const codeMessage = {
 };
 
 const checkStatus = response => {
+
+    const errortext = codeMessage[response.status] || response.statusText;
     if (response.status >= 200 && response.status < 300) {
         return response;
     }
-    const errortext = codeMessage[response.status] || response.statusText;
     notification.error({
         message: `请求错误 ${response.status}: ${response.url}`,
         description: errortext,
@@ -44,7 +45,8 @@ const checkStatus = response => {
  * @param  {object} [option] The options we want to pass to "fetch"
  * @return {object}           An object containing either "data" or "err"
  */
-const baseURL = process.env.NODE_ENV === 'production' ? window.site_url : 'http://lj-jh-zxz-yty.test.qcloudapps.com/';
+// const testURL = 'http://localhost:8000'
+export const baseURL = process.env.NODE_ENV === 'production' ? window.site_url : 'http://lj-jh-zxz-yty.test.qcloudapps.com/';
 // const baseURL = window.site_url
 // const baseURL = 'https://api.ipingdong.com';
 export default function request(url, option) {
@@ -89,8 +91,9 @@ export default function request(url, option) {
         })
         .catch(async e => {
             const status = e.name;
-            const msg = process.env.NODE_ENV !== 'production' ? await e.response.text() : 'http://127.0.0.1:3000/'
             if (status === 401) {
+                const msg = process.env.NODE_ENV !== 'production' ? await e.response.text() : 'http://127.0.0.1:3000/'
+
                 // @HACK
                 /* eslint-disable no-underscore-dangle */
                 console.log(msg)
@@ -104,7 +107,7 @@ export default function request(url, option) {
             }
             // environment should not be used
             if (status === 403) {
-                router.push('/exception/403');
+                // router.push('/exception/403');
                 return;
             }
             if (status <= 504 && status >= 500) {
