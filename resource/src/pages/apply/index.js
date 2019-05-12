@@ -7,7 +7,7 @@ import {Link} from 'react-router-dom';
 import './style.scss'
 import 'antd/dist/antd.css';
 import * as actionCreators from './store/actionCreators'
-import {stateEnum} from "../../utils/utils";
+import {stateEnum, suffix} from "../../utils/utils";
 
 const onClickSearchApplyState = ({key}) => {
 
@@ -37,12 +37,12 @@ class Apply
             title: '所属单位',
             dataIndex: 'organization',
             key: 'organization',
-            render: text => <a href="javascript:;">{text.length > 20 ? text.slice(0, 20) + '...' : text}</a>,
+            render: text => <a href="javascript:;">{suffix(text, 20)}</a>,
         }, {
             title: '申报奖项',
             dataIndex: 'apply_award',
             key: 'apply_award',
-            render: text => text.length > 20 ? text.slice(0, 20) + '...' : text
+            render: text => suffix(text, 20),
         }, {
             title: '奖项状态',
             dataIndex: 'award_state',
@@ -53,7 +53,9 @@ class Apply
         }, {
             title: '申报人/团队',
             dataIndex: 'apply_info',
-            key: 'apply_info'
+            key: 'apply_info',
+            render: text => suffix(text, 20),
+
         }, {
             title: '申报状态 ',
             dataIndex: 'state',
@@ -139,10 +141,10 @@ class Apply
                 <Breadcrumb style={{marginBottom: 40}}>
                     <Breadcrumb.Item>Home</Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a href="">个人中心</a>
+                        <a>个人中心</a>
                     </Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a href="">我的申报</a>
+                        <a>我的申报</a>
                     </Breadcrumb.Item>
                 </Breadcrumb>
                 <Form layout="inline">

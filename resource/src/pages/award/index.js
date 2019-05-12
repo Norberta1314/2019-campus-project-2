@@ -7,7 +7,7 @@ import './style.scss'
 import 'antd/dist/antd.css';
 import * as actionCreators from "./store/actionCreators";
 import {dAward} from "../../services/api";
-import {levelEnum} from "../../utils/utils";
+import {levelEnum, suffix} from "../../utils/utils";
 
 const onClickSearchApplyState = ({key}) => {
 
@@ -35,7 +35,7 @@ class Award extends Component {
             title: '所属单位',
             dataIndex: 'organization',
             key: 'organization',
-            render: text => <a href="javascript:;">{text}</a>,
+            render: text => <a href="javascript:;">{suffix(text, 20)}</a>,
         }, {
             title: '所属级别',
             dataIndex: 'level',
@@ -49,6 +49,8 @@ class Award extends Component {
             title: '申报奖项',
             dataIndex: 'name',
             key: 'name',
+            render: text => suffix(text, 20),
+
         }, {
             title: '状态',
             dataIndex: 'is_active',
@@ -81,7 +83,7 @@ class Award extends Component {
                 <span>
       <a href="javascript:;" onClick={() => this.detail(record.id)}>查看</a>
       <Divider type="vertical"/>
-      <a href="javascript:;">克隆</a>
+      <a href="javascript:;" onClick={() => this.toClone(record.id)}>克隆</a>
       <Divider type="vertical"/>
       <a href="javascript:;" onClick={() => this.edit(record.id)}>编辑</a>
       <Divider type="vertical"/>
@@ -120,6 +122,18 @@ class Award extends Component {
         push(`/award/${id}`)
     }
 
+
+    toClone(id) {
+        const {push} = this.props.history
+        const path = {
+            pathname: `/editAward/${id}`,
+            query: {
+                type: 'clone'
+            }
+        }
+        push(path)
+    }
+
     toCreate() {
         const {push} = this.props.history
         push('/editAward/')
@@ -155,10 +169,10 @@ class Award extends Component {
                 <Breadcrumb style={{marginBottom: 40}}>
                     <Breadcrumb.Item>Home</Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a href="">系统管理</a>
+                        <a>系统管理</a>
                     </Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a href="">组织管理</a>
+                        <a>组织管理</a>
                     </Breadcrumb.Item>
                 </Breadcrumb>
 

@@ -3,6 +3,7 @@ import {Divider, Table, Button, Breadcrumb, Modal, Input, Form, Tooltip, Tag, Ic
 import * as actionCreators from "./store/actionCreators";
 import {connect} from "react-redux";
 import {createOrgan, deleteOrgan, updateOrgan} from "../../services/api";
+import {suffix} from "../../utils/utils";
 
 
 const TypeEnum = {
@@ -237,7 +238,7 @@ class Organization extends Component {
             key: 'name',
             width: 100,
 
-            render: text => <a href="javascript:;">{text}</a>,
+            render: text => <a href="javascript:;">{suffix(text,20)}</a>,
         }, {
             title: '负责人',
             dataIndex: 'head',
@@ -402,10 +403,10 @@ class Organization extends Component {
                 <Breadcrumb>
                     <Breadcrumb.Item>Home</Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a href="">系统管理</a>
+                        <a>系统管理</a>
                     </Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a href="">组织管理</a>
+                        <a>组织管理</a>
                     </Breadcrumb.Item>
                 </Breadcrumb>
 

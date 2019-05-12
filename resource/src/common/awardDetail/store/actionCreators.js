@@ -10,10 +10,11 @@ export const addDetail = (detail) => ({
 })
 
 
-export const getDetail = (id) => {
+export const getDetail = (id, cb) => {
     return async (dispatch) => {
         const result = await queryAward(id)
         const action = addDetail(result)
         dispatch(action)
+        if (cb) cb()
     }
 }

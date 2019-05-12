@@ -1154,7 +1154,7 @@ def decide_award(request, apply_id):
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
     user = request.user
-    if not is_organ_head(user, user_qq, apply.award.organiztion):
+    if not is_organ_head(user, user_qq, apply.award.organization):
         return HttpResponse(status=401)
 
     try:

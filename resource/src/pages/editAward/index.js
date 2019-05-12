@@ -31,29 +31,54 @@ class EditAward extends Component {
     async componentWillMount() {
         this.openSpin()
         const {match} = this.props
+        const {query} = this.props.location
+
         console.log(match)
         const {changeOrganizations, getAward} = this.props
 
         if (match.params.id !== undefined) {
-            this.setState({
-                type: 1
-            })
-            const award = await queryAward(match.params.id)
-            Object.keys(award).forEach((item) => {
-                if (item === 'content') {
-                    this.props.form.setFieldsValue({
-                        content: BraftEditor.createEditorState(award[item])
-                    })
-                    return
-                }
-                this.props.form.setFieldsValue({
-                    [item]: award[item]
+            if (query.type === 'clone') {
+                this.setState({
+                    type: 0
                 })
-            })
+                const award = await queryAward(match.params.id)
+                Object.keys(award).forEach((item) => {
+                    if (item === 'content') {
+                        this.props.form.setFieldsValue({
+                            content: BraftEditor.createEditorState(award[item])
+                        })
+                        return
+                    }
+                    this.props.form.setFieldsValue({
+                        [item]: award[item]
+                    })
+                })
 
-            this.props.form.setFieldsValue({
-                time: [moment(award.start), moment(award.end_time)]
-            })
+                this.props.form.setFieldsValue({
+                    time: [moment(award.start), moment(award.end_time)]
+                })
+            } else {
+                this.setState({
+                    type: 1
+                })
+                const award = await queryAward(match.params.id)
+                Object.keys(award).forEach((item) => {
+                    if (item === 'content') {
+                        this.props.form.setFieldsValue({
+                            content: BraftEditor.createEditorState(award[item])
+                        })
+                        return
+                    }
+                    this.props.form.setFieldsValue({
+                        [item]: award[item]
+                    })
+                })
+
+                this.props.form.setFieldsValue({
+                    time: [moment(award.start), moment(award.end_time)]
+                })
+            }
+
         }
 
         changeOrganizations()
@@ -149,13 +174,13 @@ class EditAward extends Component {
                 <Breadcrumb style={{marginBottom: 40}}>
                     <Breadcrumb.Item>Home</Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a href="">个人中心</a>
+                        <a>个人中心</a>
                     </Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a href="">奖项管理</a>
+                        <a>奖项管理</a>
                     </Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a href="">奖项编辑</a>
+                        <a>奖项编辑</a>
                     </Breadcrumb.Item>
                 </Breadcrumb>
 

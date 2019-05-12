@@ -2,18 +2,19 @@ import React, {Component} from 'react';
 import connect from 'react-redux/es/connect/connect';
 import './style.scss'
 import AwardDetail from '../../common/awardDetail'
-import {Form, Steps, Input, Upload, Button, Icon, Breadcrumb, Table, Tag, Spin} from 'antd';
+import {Form, Steps, Input, Upload, Button, Icon, Breadcrumb, Table, Tag, Spin, Radio, Modal} from 'antd';
 import {levelEnum, stateEnum} from "../../utils/utils";
 import * as actionCreators from "./store/actionCreators";
-import {toApplyAward, updateApply} from "../../services/api";
+import {decideAward, toApplyAward, updateApply} from "../../services/api";
 import {baseURL} from "../../utils/request";
 import {get} from "../../utils/cookie";
 
-
+const confirm = Modal.confirm;
 const applyEnum = {
     0: 'apply',
     1: 'edit',
-    2: 'detail'
+    2: 'detail',
+    3: 'decide'
 }
 
 //申报
@@ -71,7 +72,9 @@ class applyDetail extends Component {
         const {query} = this.props.location
         const {match} = this.props
         if (query.type === 'apply') {
-            this.props.getApply(match.params.id)
+            this.props.getApply(match.params.id, () => {
+                this.closeSpin()
+            })
         }
 
         if (query.type === 'edit') {
@@ -101,7 +104,17 @@ class applyDetail extends Component {
         }
 
         if (query.type === 'detail') {
-            this.props.getDetail(match.params.id, 2)
+            this.props.getDetail(match.params.id, 2, () => {
+                this.closeSpin()
+            })
+        }
+
+        if (query.type === 'decide') {
+            this.props.getDetail(match.params.id, 3, () => {
+
+                this.closeSpin()
+            })
+
         }
     }
 
@@ -109,39 +122,58 @@ class applyDetail extends Component {
     handleSubmit() {
         const form = this.props.form;
         form.validateFields(async (err, values) => {
+            this.openSpin()
             console.log(values)
             if (!err) {
-                const attachment_id = !this.props.awardDetail.have_attachment ? -1 : values.upload.length > 0 ? values.upload[0].attachment_id : -1
-                const data = {
-                    attachment_id: attachment_id,
-                    apply_info: values.apply_info,
-                    apply_des: values.apply_des
-                }
+
                 const {type} = this.props
-                if (type > 0) {
+                if (type > 0 && type < 2) {
+                    const attachment_id = !this.props.awardDetail.have_attachment ? -1 : values.upload.length > 0 ? values.upload[0].attachment_id : -1
+                    const data = {
+                        attachment_id: attachment_id,
+                        apply_info: values.apply_info,
+                        apply_des: values.apply_des
+                    }
                     this.updateAward(data)
 
-                } else {
+                } else if (type === 0) {
+                    const attachment_id = !this.props.awardDetail.have_attachment ? -1 : values.upload.length > 0 ? values.upload[0].attachment_id : -1
+                    const data = {
+                        attachment_id: attachment_id,
+                        apply_info: values.apply_info,
+                        apply_des: values.apply_des
+                    }
                     this.applyAward(data)
+                } else if (type === 3) {
+                    this.decideAward(values)
                 }
             }
-
-
+            this.closeSpin()
         });
     }
 
 
-    applyAward(data) {
-        toApplyAward({id: this.props.awardDetail.id, data: data})
+    async decideAward(data) {
+        const {match} = this.props
+
+        await decideAward({id: match.params.id, data: data})
+        const {goBack} = this.props.history
+        goBack()
+    }
+
+    async applyAward(data) {
+        await toApplyAward({id: this.props.awardDetail.id, data: data})
         const {goBack} = this.props.history
         goBack()
 
     }
 
-    updateAward(data, isreapply = false) {
+    async updateAward(data) {
         const {match} = this.props
-        data = Object.assign(data, {is_reapply: isreapply})
-        updateApply({id: match.params.id, data: data})
+        const {query} = this.props.location
+
+        data = Object.assign(data, {is_reapply: query.reapply})
+        await updateApply({id: match.params.id, data: data})
         const {goBack} = this.props.history
         goBack()
     }
@@ -158,6 +190,19 @@ class applyDetail extends Component {
             return file;
         });
         return fileList
+    }
+
+    showConfirm(cb) {
+        confirm({
+            title: '你确定提交嘛？',
+            okText: '提交',
+            okType: 'danger',
+            cancelText: '取消',
+            onOk() {
+                cb()
+            },
+
+        });
     }
 
     render() {
@@ -217,13 +262,13 @@ class applyDetail extends Component {
                 <Breadcrumb style={{marginBottom: 40}}>
                     <Breadcrumb.Item>Home</Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a href="">个人中心</a>
+                        <a>个人中心</a>
                     </Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a href="">我的申报</a>
+                        <a>我的申报</a>
                     </Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a href="">申报详情</a>
+                        <a>申报详情</a>
                     </Breadcrumb.Item>
                 </Breadcrumb>
                 <Spin spinning={this.state.spin}>
@@ -231,57 +276,115 @@ class applyDetail extends Component {
                            style={{marginTop: '30px'}}
                            pagination={false}/>
                     <Steps current={type} style={{marginTop: 40}}>
-                        <Steps.Step title="申报" description="开始申报"/>
+                        <Steps.Step title="申报" description={apply.state === '-1' ? '开始申报' : ''}/>
                         <Steps.Step title="审核"
-                                    description={apply.state >= 0 && apply.state < 4 ? stateEnum[apply.state] : ''}/>
-                        <Steps.Step title="评奖"/>
+                                    description={apply.state >= 0 && apply.state < 3 ? stateEnum[apply.state] : ''}/>
+                        <Steps.Step title="评奖" description={apply.state > 2 ? stateEnum[apply.state] : ''}/>
                     </Steps>
 
-                    <Form layout='horizontal' style={{marginTop: 40}}>
-                        <Form.Item
-                            {...formItemLayout}
-                            label='申报人/社团'>
-                            {getFieldDecorator('apply_info', {
-                                rules: [{required: true, message: '填写申报人/社团'}],
-                            })(
-                                <Input placeholder='填写申报人/社团'/>
-                            )}
-                        </Form.Item>
-                        <Form.Item
-                            {...formItemLayout}
-                            label='事迹介绍'>
-                            {getFieldDecorator('apply_des', {
-                                rules: [{required: true, message: '请填写事迹介绍'}],
-                            })(
-                                <Input.TextArea autosize={{minRows: 6, maxRows: 16}}/>)}
+                    {
 
-                        </Form.Item>
-                        {
-                            awardDetail.have_attachment ? (
-                                <Form.Item
-                                    labelCol={{span: 4}}
-                                    label='附件'
-                                >
-                                    {getFieldDecorator('upload', {
-                                        valuePropName: 'fileList',
-                                        getValueFromEvent: this.normFile,
-                                    })(
-                                        <Upload {...uploadProps}>
-                                            <Button>
-                                                <Icon type="upload"/> 上传
-                                            </Button>
-                                        </Upload>)}
-                                </Form.Item>
-                            ) : ''
+                        type < 2 ? (<Form layout='horizontal' style={{marginTop: 40}}>
+                            <Form.Item
+                                {...formItemLayout}
+                                label='申报人/社团'>
+                                {getFieldDecorator('apply_info', {
+                                    rules: [{required: true, message: '填写申报人/社团'}],
+                                })(
+                                    <Input placeholder='填写申报人/社团'/>
+                                )}
+                            </Form.Item>
+                            <Form.Item
+                                {...formItemLayout}
+                                label='事迹介绍'>
+                                {getFieldDecorator('apply_des', {
+                                    rules: [{required: true, message: '请填写事迹介绍'}],
+                                })(
+                                    <Input.TextArea autosize={{minRows: 6, maxRows: 16}}/>)}
 
-                        }
+                            </Form.Item>
+                            {
+                                awardDetail.have_attachment ? (
+                                    <Form.Item
+                                        labelCol={{span: 4}}
+                                        label='附件'
+                                    >
+                                        {getFieldDecorator('upload', {
+                                            valuePropName: 'fileList',
+                                            getValueFromEvent: this.normFile,
+                                            initialValue: []
+                                        })(
+                                            <Upload {...uploadProps}>
+                                                <Button>
+                                                    <Icon type="upload"/> 上传
+                                                </Button>
+                                            </Upload>)}
+                                    </Form.Item>
+                                ) : ''
 
-                        <Form.Item style={{marginLeft: 450}}>
-                            <Button type="primary" style={{marginRight: 30}}
-                                    onClick={() => this.handleSubmit()}>我要申报</Button>
-                            <Button type="primary" onClick={() => this.props.history.goBack()}>取消</Button>
-                        </Form.Item>
-                    </Form>
+                            }
+
+                            <Form.Item style={{marginLeft: 450}}>
+                                <Button type="primary" style={{marginRight: 30}}
+                                        onClick={() => this.showConfirm(() => this.handleSubmit())}>提交</Button>
+                                <Button type="primary" onClick={() => this.props.history.goBack()}>取消</Button>
+                            </Form.Item>
+                        </Form>) : type === 3 ? (<Form layout='horizontal' style={{marginTop: 40}}>
+                            <Form.Item label='申报人/社团' {...formItemLayout}>
+                                <p>{apply.apply_info}</p>
+                            </Form.Item>
+                            <Form.Item label='事迹介绍' {...formItemLayout}>
+                                <p>{apply.apply_des}</p>
+                            </Form.Item>
+                            <Form.Item label='附件' {...formItemLayout}>
+                                {apply.attachment == -1 ? '无附件' : (<a target='_blank'
+                                    href={apply.attachment.url}>{apply.attachment.attachment_name}</a>)}
+                            </Form.Item>
+
+                            <Form.Item label='是否获奖' {...formItemLayout}>
+                                {getFieldDecorator('state', {
+                                    rules: [{required: true, message: '请设置获奖情况'}]
+                                })(
+                                    <Radio.Group>
+                                        <Radio value="3">未获奖</Radio>
+                                        <Radio value="4">已获奖</Radio>
+                                    </Radio.Group>
+                                )}
+                            </Form.Item>
+                            <Form.Item
+                                {...formItemLayout}
+                                label='评语'>
+                                {getFieldDecorator('remark', {
+                                    rules: [{required: true, message: '请填写评语'}],
+                                })(
+                                    <Input.TextArea autosize={{minRows: 6, maxRows: 16}}/>)}
+                            </Form.Item>
+
+                            <Form.Item style={{marginLeft: 450}}>
+                                <Button type="primary" style={{marginRight: 30}}
+                                        onClick={() => this.showConfirm(() => this.handleSubmit())}>提交</Button>
+                                <Button type="primary" onClick={() => this.props.history.goBack()}>取消</Button>
+                            </Form.Item>
+                        </Form>) : (<Form layout='horizontal' style={{marginTop: 40}}>
+                            <Form.Item label='申报人/社团' {...formItemLayout}>
+                                <p>{apply.apply_info}</p>
+                            </Form.Item>
+                            <Form.Item label='事迹介绍' {...formItemLayout}>
+                                <p>{apply.apply_des}</p>
+                            </Form.Item>
+                            <Form.Item label='附件' {...formItemLayout}>
+                                {apply.attachment == -1 ? '无附件' : (<a target='_blank'
+                                    href={apply.attachment.url}>{apply.attachment.attachment_name}</a>)}
+                            </Form.Item>
+
+                            <Form.Item style={{marginLeft: 450}}>
+
+                                <Button type="primary" onClick={() => this.props.history.goBack()}>取消</Button>
+                            </Form.Item>
+                        </Form>)
+                    }
+
+
                 </Spin>
             </div>
         );
@@ -301,8 +404,8 @@ const mapDispatch = (dispatch) => ({
         dispatch(action)
     },
 
-    getApply(id) {
-        const action = actionCreators.getDetail(id)
+    getApply(id, cb) {
+        const action = actionCreators.getDetail(id, cb)
         dispatch(action)
     }
 })

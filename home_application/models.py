@@ -329,5 +329,8 @@ class MyApply(models.Model):
                     'attachment') is not None else -1,
                 'apply_des': self.apply_des,
                 'state': self.state,
-                'remark': self.remark},
+                'remark': self.remark,
+                'apply_time': self.apply_time.strftime("%Y-%m-%d %H:%M:%S"),
+                'id': self.id
+            },
             'award': award}

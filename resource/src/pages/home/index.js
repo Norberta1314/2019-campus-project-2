@@ -10,124 +10,73 @@ import * as actionCreators from './store/actionCreators'
 import awardList1 from '../../statics/1.jpg'
 import awardList2 from '../../statics/2.jpg'
 import awardList3 from '../../statics/3.jpg'
+import {suffix} from "../../utils/utils";
 
 const {Meta} = Card
 let stateList = ['未申报', '申报中', '未通过', '已通过', '未获奖', '已获奖']
 let currentState = 0
-const columns = [{
-    title: '所属单位',
-    dataIndex: 'organization',
-    key: 'organization',
-    render: text => <a href="javascript:;">{text}</a>,
-}, {
-    title: '申报奖项',
-    dataIndex: 'apply_award',
-    key: 'apply_award',
-}, {
-    title: '申报人/团队',
-    dataIndex: 'apply_info',
-    key: 'apply_info'
-}, {
-    title: '申报时间',
-    dataIndex: 'apply_time',
-    key: 'apply_time'
-}, {
-    title: '操作',
-    key: 'action',
-    render: (text, record) => (
-        <span>
-      <Link to={'/applyDetail/' + record.apply_id}>查看</Link>
-    </span>
-    ),
-}]
 
-const applyList = [{
-    apply_id: '1',
-    organization: '蓝鲸产品中心',
-    apply_award: '季度之星',
-    award_state: '生效中',
-    apply_info: '黄树华',
-    state: -1,
-    apply_time: '2014-12-31 18:20:1',
-}, {
-    apply_id: '1',
-    organization: '蓝鲸产品中心',
-    apply_award: '季度之星',
-    award_state: '生效中',
-    apply_info: '黄树华',
-    state: 0,
-    apply_time: '2014-12-31 18:20:1',
-}, {
-    apply_id: '1',
-    organization: '蓝鲸产品中心',
-    apply_award: '季度之星',
-    award_state: '生效中',
-    apply_info: '黄树华',
-    state: 1,
-    apply_time: '2014-12-31 18:20:1',
-}, {
-    apply_id: '1',
-    organization: '蓝鲸产品中心',
-    apply_award: '季度之星',
-    award_state: '生效中',
-    apply_info: '黄树华',
-    state: 2,
-    apply_time: '2014-12-31 18:20:1',
-}, {
-    apply_id: '1',
-    organization: '蓝鲸产品中心',
-    apply_award: '季度之星',
-    award_state: '生效中',
-    apply_info: '黄树华',
-    state: 3,
-    apply_time: '2014-12-31 18:20:1',
-}, {
-    apply_id: '1',
-    organization: '蓝鲸产品中心',
-    apply_award: '季度之星',
-    award_state: '生效中',
-    apply_info: '黄树华',
-    state: 4,
-    apply_time: '2014-12-31 18:20:1',
-}]
 
-class Home extends Component {
+class Home
+    extends Component {
     constructor(props) {
         super(props)
         this.state = {
-            awardList: [{
-                award_id: 1,
-                img: awardList1,
-                award_title: '运营安全组2017年Q3季度奖评选',
-                organization: 'xxxx',
-                count: 12
-            }, {
-                award_id: 1,
-                img: awardList1,
-                award_title: '运营安全组2017年Q3季度奖评选',
-                organization: 'xxxx',
-                count: 12
-            }, {
-                award_id: 1,
-                img: awardList1,
-                award_title: '运营安全组2017年Q3季度奖评选',
-                organization: 'xxxx',
-                count: 12
-            }, {
-                award_id: 1,
-                img: awardList1,
-                award_title: '运营安全组2017年Q3季度奖评选',
-                organization: 'xxxx',
-                count: 12
-            }, {
-                award_id: 1,
-                img: awardList1,
-                award_title: '运营安全组2017年Q3季度奖评选',
-                organization: 'xxxx',
-                count: 12
-            },],
             searchCurrentApplyState: 1,
         }
+
+        this.columns = [{
+            title: '所属单位',
+            dataIndex: 'organization',
+            key: 'organization',
+            render: text => <a href="javascript:;">{suffix(text, 20)}</a>,
+        }, {
+            title: '申报奖项',
+            dataIndex: 'apply_award',
+            key: 'apply_award',
+            render: text => suffix(text, 20),
+
+        }, {
+            title: '申报人/团队',
+            dataIndex: 'apply_info',
+            key: 'apply_info',
+            render: text => suffix(text, 20),
+
+        }, {
+            title: '申报时间',
+            dataIndex: 'apply_time',
+            key: 'apply_time'
+        }, {
+            title: '操作',
+            key: 'action',
+            render: (text, record) => (
+                <span>
+      <a onClick={() => this.detail(record.id)}>查看</a>
+    </span>
+            ),
+        }]
+    }
+
+    detail(id) {
+        const {push} = this.props.history
+        const path = {
+            pathname: `/applyDetail/${id}`,
+            query: {
+                type: 'detail'
+            }
+        }
+        push(path)
+    }
+
+    toApply(id) {
+        const {push} = this.props.history
+        const path = {
+            pathname: `/applyDetail/${id}`,
+            query: {
+                type: 'apply'
+            }
+        }
+        push(path)
     }
 
     pageChange(page) {
@@ -146,6 +95,16 @@ class Home extends Component {
             current: currentPage
         }
 
+        const data = lastData.map((item) => {
+            return {
+                organization: item.award.organization,
+                apply_award: item.award.name,
+                apply_info: item.myapply.apply_info,
+                apply_time: item.myapply.apply_time,
+                id: item.myapply.id
+            }
+        })
+        console.log(lastData)
 
 
         return (
@@ -164,7 +123,7 @@ class Home extends Component {
                                     style={{width: 200}}
                                     cover={<img alt={item.apply_award}
                                                 src={awardList3}/>}
-                                    actions={[<Button>申请</Button>]}
+                                    actions={[<Button onClick={() => this.toApply(item.award_id)}>申请</Button>]}
                                 >
                                     <Meta
                                         title={item.organization}
@@ -181,14 +140,14 @@ class Home extends Component {
                 <div className='title'>
                     上次获奖名单
                 </div>
-                <Table columns={columns} dataSource={this.props.lastData} style={{marginTop: '30px'}} pagination={pagination}/>
+                <Table columns={this.columns} dataSource={data} style={{marginTop: '30px'}} pagination={pagination}/>
             </div>
         );
     }
 
     componentDidMount() {
         this.props.changePage()
-        this.props.changeUserPer()
+        // this.props.changeUserPer()
         this.props.getApplys()
     }
 

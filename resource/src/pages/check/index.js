@@ -5,7 +5,7 @@ import './style.scss'
 import {Link} from 'react-router-dom';
 import * as actionCreators from "./store/actionCreators";
 import {passApply, rejectApply} from "../../services/api";
-import {stateEnum} from "../../utils/utils";
+import {stateEnum, suffix} from "../../utils/utils";
 
 
 class Check extends Component {
@@ -19,15 +19,19 @@ class Check extends Component {
             title: '所属单位',
             dataIndex: 'organization',
             key: 'organization',
-            render: text => <a href="javascript:;">{text}</a>,
+            render: text => <a href="javascript:;">{suffix(text, 20)}</a>,
         }, {
             title: '申报奖项',
             dataIndex: 'apply_award',
             key: 'apply_award',
+            render: text => suffix(text, 20),
+
         }, {
             title: '申报人/团队',
             dataIndex: 'apply_info',
-            key: 'apply_info'
+            key: 'apply_info',
+            render: text => suffix(text, 20),
+
         }, {
             title: '申报状态 ',
             dataIndex: 'state',
@@ -58,13 +62,13 @@ class Check extends Component {
                             <a href="javascript:;">通过</a>
                         </Popconfirm>
                         <Divider type="vertical"/>
-                        <Popconfirm title="你确定通过嘛？" okText="通过" cancelText="取消"
+                        <Popconfirm title="你确定驳回嘛？" okText="驳回" cancelText="取消"
                                     onConfirm={() => this.rejectApply(record.apply_id)}
                         >
                             <a href="javascript:;">驳回</a>
                         </Popconfirm>
                     </div> : ''}
-                    {record.state === '2' ? <Link to={'/checkDetail/' + record.apply_id}>评奖</Link> : ''}
+                    {record.state === '2' ? <a onClick={() => this.toDecide(record.apply_id)}>评奖</a> : ''}
     </span>
             ),
         }]
@@ -81,6 +85,17 @@ class Check extends Component {
         await rejectApply(id)
         const {changePage} = this.props
         changePage(this.props.currentPage)
+    }
+
+    toDecide(apply_id) {
+        const {push} = this.props.history
+        const path = {
+            pathname: `/applyDetail/${apply_id}`,
+            query: {
+                type: 'decide'
+            }
+        }
+        push(path)
     }
 
 
@@ -120,10 +135,10 @@ class Check extends Component {
                 <Breadcrumb style={{marginBottom: 40}}>
                     <Breadcrumb.Item>Home</Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a href="">个人中心</a>
+                        <a>个人中心</a>
                     </Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a href="">我的审核</a>
+                        <a>我的审核</a>
                     </Breadcrumb.Item>
                 </Breadcrumb>
                 <Spin spinning={this.state.spin}>

@@ -127,3 +127,12 @@ export async function rejectApply(id) {
 export async function queryIndexApplys() {
     return request(`index/applys`)
 }
+
+
+export async function decideAward(param) {
+    const {id, data} = param
+    return request(`my/check/award/${id}`, {
+        method: 'PUT',
+        body: data
+    })
+}

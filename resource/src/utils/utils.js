@@ -29,3 +29,10 @@ export const levelEnum = {
     '2': '小组级',
     '3': '公司级',
 }
+
+
+export function suffix(str, len,suf = '...') {
+    if (str === null) return ''
+    if (str.length < len) return str
+    return  str.slice(len) + suf
+}

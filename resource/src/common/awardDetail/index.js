@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import './style.scss'
-import {Form, Modal, Table, Tag} from 'antd';
+import {Form, Modal, Spin, Table, Tag} from 'antd';
 import * as actionCreators from "./store/actionCreators";
 import {levelEnum, stateEnum} from "../../utils/utils";
 
@@ -12,7 +12,8 @@ class awardDetail extends Component {
     }
     state = {
         visible: false,
-        show: {}
+        show: {},
+        spin: false
     }
 
     constructor(props) {
@@ -69,7 +70,7 @@ class awardDetail extends Component {
                 key: 'attachment',
                 render: (value) => (
                     value == '-1' ? '无附件' : (
-                        <a href={value.url}>{value.attachment_name}</a>
+                        <a href={value.url} target='_blank' >{value.attachment_name}</a>
                     )
                 )
             }, {
@@ -88,14 +89,27 @@ class awardDetail extends Component {
     }
 
     componentWillMount() {
+        this.openSpin()
+
         const {match} = this.props
-        console.log(match)
-        this.getDetail(match.params.id)
+        const {getDetail} = this.props
+        getDetail(match.params.id, () => {
+            this.closeSpin()
+        })
     }
 
-    getDetail(id) {
-        const {getDetail} = this.props
-        getDetail(id)
+
+
+    openSpin() {
+        this.setState({
+            spin: true
+        })
+    }
+
+    closeSpin() {
+        this.setState({
+            spin: false
+        })
     }
 
     showModal = (show) => {
@@ -149,46 +163,48 @@ class awardDetail extends Component {
         },]
         return (
             <div className='layout-background'>
-                <Table columns={this.columns_detail} dataSource={data} showHeader={false} style={{marginTop: '30px'}}
-                       pagination={false}/>
-                {
-                    this.props.showApply ? (
-                                        <Table columns={this.columns} dataSource={detail.applys} style={{marginTop: '30px'}}
-                       pagination={false}/>
-                    ) : ''
-                }
+                <Spin spinning={this.state.spin}>
+                    <Table columns={this.columns_detail} dataSource={data} showHeader={false}
+                           style={{marginTop: '30px'}}
+                           pagination={false}/>
+                    {
+                        this.props.showApply ? (
+                            <Table columns={this.columns} dataSource={detail.applys} style={{marginTop: '30px'}}
+                                   pagination={false}/>
+                        ) : ''
+                    }
 
-                {
-                    this.state.visible ? (
-                        <Modal
-                            title="Basic Modal"
-                            visible={this.state.visible}
-                            onOk={this.handleOk}
-                            onCancel={this.handleCancel}
-                        >
-                            <Form>
-                                <Form.Item label='获奖人/团队'>
-                                    <p>{show.name}</p>
-                                </Form.Item>
-                                <Form.Item label='事迹介绍'>
-                                    <p>{show.apply_des}</p>
-                                </Form.Item>
-                                <Form.Item label='附件'>
-                                    {show.attachment == '-1' ? '无附件' : (
-                                        <a href={show.url}>{show.attachment_name}</a>
-                                    )}
-                                </Form.Item>
-                                <Form.Item label='评审结果'>
-                                    <p>{stateEnum[show.state]}</p>
-                                </Form.Item>
-                                <Form.Item label='评语'>
-                                    <p>{stateEnum[show.remark]}</p>
-                                </Form.Item>
-                            </Form>
-                        </Modal>
-                    ) : ''
-                }
-
+                    {
+                        this.state.visible ? (
+                            <Modal
+                                title="详细信息"
+                                visible={this.state.visible}
+                                onOk={this.handleOk}
+                                onCancel={this.handleCancel}
+                            >
+                                <Form>
+                                    <Form.Item label='获奖人/团队'>
+                                        <p>{show.name}</p>
+                                    </Form.Item>
+                                    <Form.Item label='事迹介绍'>
+                                        <p>{show.apply_des}</p>
+                                    </Form.Item>
+                                    <Form.Item label='附件'>
+                                        {show.attachment === -1 ? '无附件' : (
+                                            <a target='_blank' href={show.attachment.url}>{show.attachment.attachment_name}</a>
+                                        )}
+                                    </Form.Item>
+                                    <Form.Item label='评审结果'>
+                                        <p>{stateEnum[show.state]}</p>
+                                    </Form.Item>
+                                    <Form.Item label='评语'>
+                                        <p>{show.remark}</p>
+                                    </Form.Item>
+                                </Form>
+                            </Modal>
+                        ) : ''
+                    }
+                </Spin>
             </div>
         )
             ;
@@ -200,8 +216,8 @@ const mapState = (state) => ({
 })
 
 const mapDispatch = (dispatch) => ({
-    getDetail(id) {
-        const action = actionCreators.getDetail(id)
+    getDetail(id, cb) {
+        const action = actionCreators.getDetail(id, cb)
         dispatch(action)
     }
 })

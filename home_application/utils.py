@@ -106,7 +106,6 @@ def get_my_not_apply(self, user_qq):
             awards.append(item_t.id)
     applys = MyApply.objects.filter(award_id__in=awards, user=self).all()
     not_awards_id = [item.award.id for item in applys]
-    not_awards = Awards.objects.in_bulk(not_awards_id)
     not_awards = Awards.objects.exclude(
         id__in=not_awards_id).filter(soft_del=False).order_by('-id').all()
 

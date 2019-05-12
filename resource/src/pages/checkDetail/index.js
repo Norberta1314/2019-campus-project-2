@@ -44,13 +44,13 @@ class CheckDetail extends Component {
         <Breadcrumb style={ {marginBottom: 40} }>
           <Breadcrumb.Item>Home</Breadcrumb.Item>
           <Breadcrumb.Item>
-            <a href="">个人中心</a>
+            <a>个人中心</a>
           </Breadcrumb.Item>
           <Breadcrumb.Item>
-            <a href="">我的审核</a>
+            <a>我的审核</a>
           </Breadcrumb.Item>
           <Breadcrumb.Item>
-            <a href="">审核细节</a>
+            <a>审核细节</a>
           </Breadcrumb.Item>
         </Breadcrumb>
         <AwardDetail/>

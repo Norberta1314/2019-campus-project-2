@@ -23,20 +23,19 @@ export default (state = defaultState, action) => {
   }
   if (action.type === actionTypes.UPDATE_PAGE) {
     const newState = deepClone(state)
-    state.currentPage = action.page
+    state.currentPage = action.current
     return newState
   }
   if (action.type === actionTypes.UPDATE_PAGEDATA) {
     const newState = deepClone(state)
-    state.lastData = action.lastData
-    state.count = action.count
+    newState.lastData = action.lastData
+    newState.count = action.count
     return newState
   }
 
   if (action.type === actionTypes.GET_APPLYS) {
     const newState = deepClone(state)
     newState.applys = action.applys
-
     return newState
   }
   return state
