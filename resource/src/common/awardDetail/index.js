@@ -29,7 +29,6 @@ class awardDetail extends Component {
             key: 'detail',
             render: (values, record) => {
                 if (record.item === '审核人') {
-                    console.log(values)
                     return (<span>
           {values.map(value => <Tag color="blue" key={value}>{value}</Tag>)} </span>)
                 }
@@ -120,14 +119,12 @@ class awardDetail extends Component {
     }
 
     handleOk = (e) => {
-        console.log(e);
         this.setState({
             visible: false,
         });
     }
 
     handleCancel = (e) => {
-        console.log(e);
         this.setState({
             visible: false,
         });

@@ -22,7 +22,6 @@ class EditableTagGroup extends React.Component {
         super(props)
         const {value, onChange} = this.props
         this.onChnage = onChange
-        console.log(this.props)
         this.setState({
             tags: value || []
         })
@@ -32,7 +31,6 @@ class EditableTagGroup extends React.Component {
 
     componentDidMount() {
         const {value} = this.props
-        console.log(this.props)
         this.setState({
             tags: value || []
         })
@@ -41,7 +39,6 @@ class EditableTagGroup extends React.Component {
 
     handleClose = (removedTag) => {
         const tags = this.state.tags.filter(tag => tag !== removedTag);
-        console.log(tags);
         this.setState({tags});
         this.onChnage(tags)
     }
@@ -60,7 +57,6 @@ class EditableTagGroup extends React.Component {
         if (inputValue && tags.indexOf(inputValue) === -1) {
             tags = [...tags, inputValue];
         }
-        console.log(tags);
         this.setState({
             tags,
             inputVisible: false,
@@ -315,9 +311,13 @@ class Organization extends Component {
         this.showModal(1)
     }
 
-    onChange(page = 0) {
+    onChange(page = 1) {
+        this.openSpin()
         const {changePage} = this.props
-        changePage(page)
+        changePage(page, () => {
+            this.closeSpin()
+
+        })
     }
 
     showModal = (type) => {
@@ -358,7 +358,6 @@ class Organization extends Component {
         console.log(form.getFieldsValue())
         form.validateFields(async (err, values) => {
             if (err) {
-                console.log(values)
                 this.closeModalSpin()
                 return;
             }
@@ -389,13 +388,13 @@ class Organization extends Component {
     }
 
     render() {
-        const {total, data, currentPage} = this.props
+        const {total, organizations, currentPage} = this.props
 
         let pagination = {
             total: total,
             showTotal: (total) => `总共${total}个组织`,
             pageSize: 10,
-            onChange: this.pageChange,
+            onChange: (page) => this.onChange(page),
             current: currentPage
         }
         return (
@@ -412,7 +411,7 @@ class Organization extends Component {
 
                 <Button style={{marginTop: '30px'}} onClick={this.createOrganization.bind(this)}>添加</Button>
                 <Spin spinning={this.state.spinning}>
-                    <Table columns={this.columns} dataSource={data} style={{marginTop: '30px'}}
+                    <Table columns={this.columns} dataSource={organizations} style={{marginTop: '30px'}}
                            pagination={pagination}/>
                 </Spin>
                 {
@@ -436,7 +435,7 @@ class Organization extends Component {
 }
 
 const mapState = (state) => ({
-    data: state.organization.data,
+    organizations: state.organization.data,
     total: state.organization.count,
     currentPage: state.organization.currentPage
 })

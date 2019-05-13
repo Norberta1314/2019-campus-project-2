@@ -41,7 +41,7 @@ class OrganizationsManager(models.Manager):
 
 
 class Organizations(models.Model):
-    name = models.CharField(max_length=255, verbose_name='所属组织', unique=True)
+    name = models.CharField(max_length=255, verbose_name='所属组织')
     """
         josn 序列化不好查询和删除 改为映射表
     """
@@ -226,6 +226,7 @@ class Awards(models.Model):
                 'level': item.level,
                 'is_active': item.is_active,
                 'start_time': item.start_time.strftime("%Y-%m-%d %H:%M:%S"),
+                'end_time': item.end_time.strftime("%Y-%m-%d %H:%M:%S"),
                 'apply_count': item.applys_count,
                 'apply_award_count': item.apply_award_count
             })

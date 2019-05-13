@@ -13,7 +13,6 @@ export default (state = defaultState, action) => {
     Object.keys(newState).map((value) => {
       newState[value] = action[value]
     })
-    console.log('new', newState)
     return newState
   }
   return state

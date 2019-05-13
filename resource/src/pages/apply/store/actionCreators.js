@@ -10,10 +10,11 @@ export const addAwardList = (payload) => ({
 
 })
 
-export const getAwardList = (page) => {
+export const getAwardList = (page, cb) => {
   return async (dispatch) => {
     const applyList = await queryMyApplys({page: page})
     const action = addAwardList(Object.assign(applyList, {page: page}))
     dispatch(action)
+    if(cb) cb()
   }
 }

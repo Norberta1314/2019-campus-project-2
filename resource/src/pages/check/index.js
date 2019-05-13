@@ -119,6 +119,14 @@ class Check extends Component {
         })
     }
 
+    pageChange(page = 1) {
+        this.openSpin()
+        const {changePage} = this.props
+        changePage(page, () => {
+            this.closeSpin()
+        })
+    }
+
     render() {
 
         const {total, data, currentPage} = this.props
@@ -127,7 +135,7 @@ class Check extends Component {
             total: total,
             showTotal: (total) => `总共${total}个申请`,
             pageSize: 10,
-            onChange: this.pageChange,
+            onChange: (page) => this.pageChange(page),
             current: currentPage
         }
         return (

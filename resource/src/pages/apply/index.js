@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import {
-    Form, Button, Input, Dropdown, Menu, Icon, DatePicker, Table, Divider, Breadcrumb
+    Form, Button, Input, Dropdown, Menu, Icon, DatePicker, Table, Divider, Breadcrumb, Spin
 } from 'antd'
 import {Link} from 'react-router-dom';
 import './style.scss'
@@ -18,6 +18,10 @@ let currentState = 0
 
 class Apply
     extends Component {
+    state = {
+        spin: false
+    }
+
     constructor(props) {
         super(props)
         this.state = {
@@ -126,6 +130,28 @@ class Apply
         push(path)
     }
 
+
+    openSpin() {
+        this.setState({
+            spin: true
+        })
+    }
+
+    closeSpin() {
+        this.setState({
+            spin: false
+        })
+    }
+
+    onChange(page = 1) {
+        this.openSpin()
+        const {getAwardList} = this.props
+        getAwardList(page, () => {
+            this.closeSpin()
+
+        })
+    }
+
     render() {
         const {RangePicker} = DatePicker
         const {applyList, total, currentPage} = this.props
@@ -133,7 +159,7 @@ class Apply
             total: total,
             showTotal: (total) => `总共${total}个`,
             pageSize: 10,
-            onChange: this.pageChange,
+            onChange: (page) => this.pageChange(page),
             current: currentPage
         }
         return (
@@ -188,13 +214,18 @@ class Apply
                         </Button>
                     </Form.Item>
                 </Form>
-                <Table columns={this.columns} dataSource={applyList} style={{marginTop: '30px'}}/>
+                <Spin spinning={this.state.spin}>
+                    <Table columns={this.columns} dataSource={applyList} style={{marginTop: '30px'}}/>
+                </Spin>
             </div>
         );
     }
 
     componentDidMount() {
-        this.props.getAwardList()
+        this.openSpin()
+        this.props.getAwardList(1, () => {
+            this.closeSpin()
+        })
     }
 
     onClickSearchApplyState() {
@@ -211,8 +242,8 @@ const mapState = (state) => ({
 })
 
 const mapDispatch = (dispatch) => ({
-    getAwardList(page = 1) {
-        const action = actionCreators.getAwardList(page)
+    getAwardList(page = 1, cb) {
+        const action = actionCreators.getAwardList(page, cb)
         dispatch(action)
     }
 })

@@ -34,6 +34,13 @@ class Header extends Component {
     }
 
     render() {
+        const menu = (
+            <Menu>
+                <Menu.Item key="0">
+                    <a href={window.site_url + 'accounts/logout/'}>退出登录</a>
+                </Menu.Item>
+            </Menu>
+        )
         return (
             <div className="header-background">
                 <Link to='/'>
@@ -85,10 +92,11 @@ class Header extends Component {
 
                 <div className='userinfo'>
                     <img className='avatar' src={this.props.user.avatar} alt=''/>
-                    <div className='nickname'>
-                        {/*norberta*/}
-                        {this.props.user.nick}
-                    </div>
+                    <Dropdown overlay={menu} trigger={['click']}>
+                        <a className="nickname" href="#">
+                            {this.props.user.nick}
+                        </a>
+                    </Dropdown>
                 </div>
 
             </div>

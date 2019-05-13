@@ -33,30 +33,32 @@ class EditAward extends Component {
         const {match} = this.props
         const {query} = this.props.location
 
-        console.log(match)
         const {changeOrganizations, getAward} = this.props
 
-        if (match.params.id !== undefined) {
-            if (query.type === 'clone') {
-                this.setState({
-                    type: 0
-                })
-                const award = await queryAward(match.params.id)
-                Object.keys(award).forEach((item) => {
-                    if (item === 'content') {
-                        this.props.form.setFieldsValue({
-                            content: BraftEditor.createEditorState(award[item])
-                        })
-                        return
-                    }
-                    this.props.form.setFieldsValue({
-                        [item]: award[item]
-                    })
-                })
 
-                this.props.form.setFieldsValue({
-                    time: [moment(award.start), moment(award.end_time)]
-                })
+        if (match.params.id !== undefined) {
+            if (query !== undefined) {
+                if (query.type === 'clone') {
+                    this.setState({
+                        type: 0
+                    })
+                    const award = await queryAward(match.params.id)
+                    Object.keys(award).forEach((item) => {
+                        if (item === 'content') {
+                            this.props.form.setFieldsValue({
+                                content: BraftEditor.createEditorState(award[item])
+                            })
+                            return
+                        }
+                        this.props.form.setFieldsValue({
+                            [item]: award[item]
+                        })
+                    })
+
+                    this.props.form.setFieldsValue({
+                        time: [moment(award.start), moment(award.end_time)]
+                    })
+                }
             } else {
                 this.setState({
                     type: 1

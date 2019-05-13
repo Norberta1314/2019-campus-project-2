@@ -12,7 +12,7 @@ from common.pxfilter import XssHtml
 from common.utils import html_escape
 from functools import reduce
 
-from .models import OrganizationsUser, Awards, MyApply
+from .models import OrganizationsUser, Awards, MyApply, Organizations
 
 
 class InvalidData(Exception):
@@ -95,19 +95,14 @@ def is_organ_head(self, user_qq, organ):
 
 
 def get_my_not_apply(self, user_qq):
-    organs = OrganizationsUser.objects.filter(
+    organs_user = OrganizationsUser.objects.filter(
         user=user_qq, type=u'1', organization__soft_del=False).all()
-    awards = []
-    for item in organs:
-        temp = Awards.objects.filter(
-            organization=item.organization,
-            soft_del=False).all()
-        for item_t in temp:
-            awards.append(item_t.id)
-    applys = MyApply.objects.filter(award_id__in=awards, user=self).all()
+    organs = Organizations.objects.filter(organizationsuser__in=organs_user).all()
+    awards = Awards.objects.filter(organization__in=organs, soft_del=False).all()
+    applys = MyApply.objects.filter(award__in=awards, user=self).all()
     not_awards_id = [item.award.id for item in applys]
     not_awards = Awards.objects.exclude(
-        id__in=not_awards_id).filter(soft_del=False).order_by('-id').all()
+        id__in=not_awards_id).filter(soft_del=False, organization__soft_del=False).order_by('-id').all()
 
     ret = []
     for item in not_awards:
@@ -145,14 +140,14 @@ def get_my_apply(self, user_qq, apply_Q_list, sql_where_list):
             'select `awards`.`id`,`awards`.id as award_id, `my_applys`.id as apply_id, `my_applys`.`apply_info`, `o`.`name`, `awards`.`name` as apply_award, `awards`.`is_active` as award_state, `my_applys`.`state`, `my_applys`.`apply_time` from `awards` left join `my_applys` on `awards`.`id` = `my_applys`.`award_id` join organizations o on awards.organization_id = o.id' +
             sql_where_list +
             awards +
-            ' `awards`.`soft_del` = 0  order by award_id desc',
+            ' `awards`.`soft_del` = 0 and `o`.`soft_del` = 0 order by award_id desc',
             apply_Q_list)
     else:
         applys = MyApply.objects.raw(
             'select `awards`.`id`,`awards`.id as award_id, `my_applys`.id as apply_id, `my_applys`.`apply_info`, `o`.`name`, `awards`.`name` as apply_award, `awards`.`is_active` as award_state, `my_applys`.`state`, `my_applys`.`apply_time` from `awards` left join `my_applys` on `awards`.`id` = `my_applys`.`award_id` join organizations o on awards.organization_id = o.id' +
             sql_where_list +
             awards +
-            ' `awards`.`soft_del` = 0 order by award_id desc')
+            ' `awards`.`soft_del` = 0 and `o`.`soft_del` = 0 order by award_id desc')
     ret = []
     for item in applys:
         ret.append({
@@ -172,7 +167,7 @@ def get_my_check(self, user_qq):
     organs = OrganizationsUser.objects.filter(user=user_qq, type=u'0').all()
     awards = []
     for item in organs:
-        temp = Awards.objects.filter(organization=item.organization).all()
+        temp = Awards.objects.filter(organization=item.organization, organization__soft_del=False).all()
         for item_t in temp:
             awards.append(item_t.id)
 

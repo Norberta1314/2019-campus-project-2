@@ -91,7 +91,7 @@ class Home
             total: total,
             showTotal: (total) => `总共${total}获奖`,
             pageSize: 10,
-            onChange: this.pageChange,
+            onChange: (page) => this.pageChange(page),
             current: currentPage
         }
 
@@ -104,7 +104,6 @@ class Home
                 id: item.myapply.id
             }
         })
-        console.log(lastData)
 
 
         return (

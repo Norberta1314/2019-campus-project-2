@@ -1,1 +1,1 @@
-export  const CHANGE_PAGE = 'organization/change_page'
+export  const CHANGE_PAGE = 'check/change_page'

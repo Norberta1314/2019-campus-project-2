@@ -418,11 +418,12 @@ class AwardView(AdminRequire, View):
 @require_GET
 def awards(request):
     # 过滤字段
-    organization_f = request.GET.get('organization')
-    apply_award_f = request.GET.get('apply_award')
-    check_state_f = request.GET.get('check_state')
-    start_time_f = request.GET.get('start_time')
-    end_time_f = request.GET.get('end_time')
+    organization_f = html_escape(request.GET.get('organization'))
+    apply_award_f = html_escape(request.GET.get('apply_award'))
+    check_state_f = html_escape(request.GET.get('check_state'))
+    start_time_f = html_escape(request.GET.get('start_time'))
+    end_time_f = html_escape(request.GET.get('end_time'))
+
     query_list = []
 
     if organization_f is not None:
@@ -440,9 +441,9 @@ def awards(request):
             reduce(
                 operator.or_,
                 query_list),
-            soft_del=False).order_by('-id').all()
+            soft_del=False, organization__soft_del=False).order_by('-id').all()
     else:
-        award_all = Awards.objects.filter(soft_del=False).order_by('-id').all()
+        award_all = Awards.objects.filter(soft_del=False, organization__soft_del=False).order_by('-id').all()
     paginator = Paginator(award_all, 10)
     page = request.GET.get('page', 1)
     try:
