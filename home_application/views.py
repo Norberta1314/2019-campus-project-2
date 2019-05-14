@@ -443,7 +443,8 @@ def awards(request):
                 query_list),
             soft_del=False, organization__soft_del=False).order_by('-id').all()
     else:
-        award_all = Awards.objects.filter(soft_del=False, organization__soft_del=False).order_by('-id').all()
+        award_all = Awards.objects.filter(
+            soft_del=False, organization__soft_del=False).order_by('-id').all()
     paginator = Paginator(award_all, 10)
     page = request.GET.get('page', 1)
     try:
@@ -805,7 +806,10 @@ class MyApplyView(View):
 
 def apply_award(request, award_id):
     data = {}
-    if MyApply.objects.filter(award_id=award_id, user=request.user).exists() or not Awards.objects.get(id=award_id).is_active:
+    if MyApply.objects.filter(
+            award_id=award_id,
+            user=request.user).exists() or not Awards.objects.get(
+            id=award_id).is_active:
         return HttpResponse(status=400)
     try:
         data = json.loads(request.body)
