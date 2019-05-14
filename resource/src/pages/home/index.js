@@ -1,7 +1,7 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import {
-    Form, Button, Input, Dropdown, Menu, Icon, DatePicker, Table, Divider, Card, Col, Row
+    Form, Button, Input, Dropdown, Menu, Icon, DatePicker, Table, Divider, Card, Col, Row, Empty
 } from 'antd'
 import {Link} from 'react-router-dom';
 import './style.scss'
@@ -112,7 +112,7 @@ class Home
                     当前可申报奖项
                 </div>
                 <Row gutter={16}>
-                    {applys.map((item, index) => {
+                    { applys.length > 0 ? applys.map((item, index) => {
                         if (index > 3) return
                         return (
 
@@ -134,7 +134,7 @@ class Home
                                 </Card>
                             </Col>
                         )
-                    })}
+                    }) : <Empty />}
                 </Row>
                 <div className='title'>
                     上次获奖名单

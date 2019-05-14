@@ -51,9 +51,9 @@ def valid_award(data):
 
     # 验证时xss富文本过滤
     parser = XssHtml()
-    # parser.feed(data['content'])
-    # parser.close()
-    # data['content'] = parser.getHtml()
+    parser.feed(data['content'])
+    parser.close()
+    data['content'] = parser.getHtml()
     data['name'] = html_escape(data['name'])
 
 
@@ -102,7 +102,7 @@ def get_my_not_apply(self, user_qq):
     applys = MyApply.objects.filter(award__in=awards, user=self).all()
     not_awards_id = [item.award.id for item in applys]
     not_awards = Awards.objects.exclude(
-        id__in=not_awards_id).filter(soft_del=False, organization__soft_del=False).order_by('-id').all()
+        id__in=not_awards_id, is_active=True).filter(soft_del=False, organization__soft_del=False, organization__in=organs).order_by('-id').all()
 
     ret = []
     for item in not_awards:
@@ -119,14 +119,14 @@ def get_my_not_apply(self, user_qq):
 
 def get_my_apply(self, user_qq, apply_Q_list, sql_where_list):
     awards = Awards.objects.raw(
-        'select `awards`.id from `awards` join `organizations` o on `awards`.`organization_id` = `o`.`id` join `home_application_organizationsuser` `hao` on `o`.`id` = `hao`.`organization_id` where `hao`.`type` = \'0\' and o.soft_del = 0 and `hao`.`user` = %s',
+        'select `awards`.id from `awards` join `organizations` o on `awards`.`organization_id` = `o`.`id` join `home_application_organizationsuser` `hao` on `o`.`id` = `hao`.`organization_id` where `hao`.`type` = \'1\' and o.soft_del = 0 and `hao`.`user` = %s',
         [user_qq])
     awards = [str(item.id) for item in awards]
     if len(awards) > 0:
         awards = ','.join(awards)
         awards = '  `awards`.`id` in (' + awards + ') and '
     else:
-        awards = ''
+        return []
     # if len(apply_Q_list) > 0:
     #     applys = MyApply.objects.filter(
     #         reduce(

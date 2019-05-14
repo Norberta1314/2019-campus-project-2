@@ -17,6 +17,7 @@ import * as actionCreators from './pages/home/store/actionCreators'
 import EditAward from "./pages/editAward";
 import {LocaleProvider} from "antd";
 import zhCN from 'antd/lib/locale-provider/zh_CN';
+import Test from "./Test";
 
 class App extends Component {
     render() {
@@ -38,8 +39,6 @@ class App extends Component {
 
                             <Route path='/checkDetail/:award_id' exact component={checkDetail}/>
                             <Route path='/editAward/:id?' exact component={EditAward}/>
-
-
                         </div>
                     </HashRouter>
 

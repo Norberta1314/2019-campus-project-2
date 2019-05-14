@@ -714,10 +714,10 @@ def my_applys(request):
     :return:
     """
     # 过滤字段获取
-    apply_award_f = request.GET.get('apply_award')
-    check_state_f = request.GET.get('check_state')
-    start_time_f = request.GET.get('start_time')
-    end_time_f = request.GET.get('end_time')
+    apply_award_f = html_escape(request.GET.get('apply_award'))
+    check_state_f = html_escape(request.GET.get('check_state'))
+    start_time_f = html_escape(request.GET.get('start_time'))
+    end_time_f = html_escape(request.GET.get('end_time'))
     apply_query_list = []
     apply_query_sql_where = ''
     temp_sql_list = []
@@ -805,7 +805,7 @@ class MyApplyView(View):
 
 def apply_award(request, award_id):
     data = {}
-    if MyApply.objects.filter(award_id=award_id, user=request.user).exists():
+    if MyApply.objects.filter(award_id=award_id, user=request.user).exists() or not Awards.objects.get(id=award_id).is_active:
         return HttpResponse(status=400)
     try:
         data = json.loads(request.body)
