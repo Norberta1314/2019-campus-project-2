@@ -215,6 +215,14 @@ class Awards(models.Model):
             'applys': applys
         }
 
+    def clone(self, data):
+        self.pk = None
+        self.id = None
+        del data['id']
+        for k, v in data.items():
+            setattr(self, k, v)
+        self.save()
+
     @staticmethod
     def to_array(awards):
         ret = []
@@ -241,7 +249,9 @@ class Attachment(models.Model):
         db_table = 'attachment'
 
     def getFileUrl(self, path):
-        pre = os.environ.get('QINIU_BUCKET_DOMAIN', getattr(settings, 'QINIU_BUCKET_DOMAIN', None))
+        pre = os.environ.get(
+            'QINIU_BUCKET_DOMAIN', getattr(
+                settings, 'QINIU_BUCKET_DOMAIN', None))
         pre = 'http://%s' % pre
         return pre + path
 
@@ -287,14 +297,13 @@ class MyApply(models.Model):
         ret = []
         applys = cls.objects.filter(award=award).all()
         for item in applys:
-            ret.append({
-                'name': item.apply_info,
-                'state': item.state,
-                'apply_time': item.apply_time.strftime("%Y-%m-%d %H:%M:%S"),
-                'apply_des': item.apply_des,
-                'attachment': item.attachment.to_json() if getattr(item, 'attachment') is not None else -1,
-                'remark': item.remark
-            })
+            ret.append({'name': item.apply_info,
+                        'state': item.state,
+                        'apply_time': item.apply_time.strftime("%Y-%m-%d %H:%M:%S"),
+                        'apply_des': item.apply_des,
+                        'attachment': item.attachment.to_json() if getattr(item,
+                                                                           'attachment') is not None else -1,
+                        'remark': item.remark})
         return ret
 
     def reject(self):

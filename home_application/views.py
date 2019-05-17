@@ -27,7 +27,7 @@ from common.utils import html_escape
 from home_application.decorators import require_admin, require_head
 from home_application.models import Organizations, Awards, Attachment, MyApply
 from home_application.utils import valid_organization, valid_award, valid_apply, valid_decide, is_organ_head, \
-    get_my_apply, get_my_not_apply, get_my_check, is_head, InvalidData
+    get_my_apply, get_my_not_apply, get_my_check, is_head, InvalidData, valid_clone
 from functools import reduce
 
 
@@ -616,14 +616,15 @@ def get_award_organizations(request):
 
 @apiParamExample {json} Request-Example:
     [{
+        id: '',
         name: "蓝鲸",
-        content: "xxxxxx", // 富文本
-        level: "0",
-        organization: "23",
+        # content: "xxxxxx", // 富文本
+        # level: "0",
+        organization_id: "23",
         start_time: "2014-12-31 18:20:1",
         end_time: "2014-12-31 18:20:1",
-        have_attachment: true,
-        is_active: true,
+        # have_attachment: true,
+        # is_active: true,
     }]
 
 
@@ -644,17 +645,14 @@ def awards_clone(request):
     try:
         data = json.loads(request.body)
         for item in data:
-            valid_award(item)
+            valid_clone(item)
     except InvalidData as e:
         logging.debug(u'%s' % e)
         return HttpResponse(status=422)
 
-    try:
-        for item in data:
-            Awards.objects.create(**item)
-    except Exception as e:
-        logging.debug(u'%s' % e)
-        return HttpResponse(status=400)
+    for item in data:
+        award = Awards.objects.filter(id=item['id']).first()
+        award.clone(item)
 
     return HttpResponse(status=201)
 

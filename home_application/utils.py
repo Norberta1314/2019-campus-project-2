@@ -57,6 +57,14 @@ def valid_award(data):
     data['name'] = html_escape(data['name'])
 
 
+def valid_clone(data):
+    a = {}
+    for k, v in data.items():
+        if v == '' or v is None:
+            raise InvalidData(u'不能为空')
+
+
+
 def valid_apply(data):
     for k, v in data.items():
         if v == '' or v is None:
