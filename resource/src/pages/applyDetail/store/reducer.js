@@ -9,7 +9,7 @@ const defaultState = {
 
 export default (state = defaultState, action) => {
   if ( action.type === actionTypes.GET_DETAIL) {
-    const newState = deepClone(state);
+    const newState = deepClone(state)
     newState.awardDetail = action.awardDetail
     newState.type = 0
     return newState

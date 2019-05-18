@@ -107,6 +107,7 @@ export default function request(url, option) {
             }
             // environment should not be used
             if (status === 403) {
+
                 // router.push('/exception/403');
                 return;
             }

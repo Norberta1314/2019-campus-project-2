@@ -9,15 +9,15 @@ import Apply from './pages/apply'
 import Check from './pages/check'
 import Award from './pages/award'
 import Organization from './pages/organization'
-
 import ApplyDetail from './pages/applyDetail'
 import checkDetail from './pages/checkDetail'
-import AwardDeail from './common/awardDetail'
+import AwardDetail from './common/awardDetail'
+import CloneAward from './pages/cloneAward'
 import * as actionCreators from './pages/home/store/actionCreators'
 import EditAward from "./pages/editAward";
 import {LocaleProvider} from "antd";
 import zhCN from 'antd/lib/locale-provider/zh_CN';
-import Test from "./Test";
+// import Test from "./Test";
 
 class App extends Component {
     render() {
@@ -33,12 +33,11 @@ class App extends Component {
                             <Route path='/organization' exact component={Organization}/>
                             <Route path='/award' exact component={Award}/>
                             {/*<Route path='/newApply/:id' exact component={NewApply}/>*/}
-                            <Route path='/award/:id' exact component={AwardDeail}/>
-                            {/*<Route path='/editApply/:award_id' exact component={EditApply}/>*/}
+                            <Route path='/award/:id' exact component={AwardDetail}/>
                             <Route path='/applyDetail/:id?' exact component={ApplyDetail}/>
-
                             <Route path='/checkDetail/:award_id' exact component={checkDetail}/>
                             <Route path='/editAward/:id?' exact component={EditAward}/>
+                            <Route path='/CloneAward' exact component={CloneAward}/>
                         </div>
                     </HashRouter>
 

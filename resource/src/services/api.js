@@ -136,3 +136,11 @@ export async function decideAward(param) {
         body: data
     })
 }
+
+export async function pitchCloneAward(param) {
+    const {data} = param
+    return request(`awards/clone`, {
+        method:'POST',
+        body: data
+    })
+}

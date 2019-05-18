@@ -8,6 +8,7 @@ import {reducer as awardReducer} from '../pages/award/store'
 import {reducer as checkReducer} from '../pages/check/store'
 import {reducer as awardDetailReducer} from '../common/awardDetail/store'
 import {reducer as applyDetailReducer} from '../pages/applyDetail/store'
+import {reducer as cloneAwardReducer} from '../pages/cloneAward/store'
 
 export default combineReducers({
   header: headerReducer,
@@ -18,5 +19,6 @@ export default combineReducers({
   award: awardReducer,
   awardDetail: awardDetailReducer,
   check: checkReducer,
-  applyDetail: applyDetailReducer
+  applyDetail: applyDetailReducer,
+  cloneAward: cloneAwardReducer
 })

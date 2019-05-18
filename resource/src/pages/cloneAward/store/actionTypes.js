@@ -1,0 +1,1 @@
+export const GET_ORGANIZATION_List = 'cloneAward/get_organization_list'
