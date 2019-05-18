@@ -27,4 +27,5 @@ urlpatterns = patterns(
     (r'^my/check/award/([0-9]{1,})$', 'decide_award'),
     (r'^index/applys$', 'can_apply_list'),
     (r'^index/last$', 'last_award_list'),
+    (r'^awards/clone$', 'awards_clone'),
 )
