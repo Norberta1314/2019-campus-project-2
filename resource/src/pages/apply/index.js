@@ -158,7 +158,7 @@ class Apply
       total: total,
       showTotal: (total) => `总共${ total }个`,
       pageSize: 10,
-      onChange: (page) => this.pageChange(page),
+      onChange: (page) => this.onChange(page),
       current: currentPage
     }
     return (
