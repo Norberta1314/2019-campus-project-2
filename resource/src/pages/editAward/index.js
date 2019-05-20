@@ -7,6 +7,7 @@ import {Breadcrumb, Button, Form, Icon, Input, DatePicker, Select, Upload, Switc
 import * as actionCreators from './store/actionCreators'
 import {cAward, queryAward, uAward} from "../../services/api";
 import moment from "moment";
+import {Link} from "react-router-dom";
 
 const {Option} = Select;
 const {MonthPicker, RangePicker} = DatePicker;
@@ -174,15 +175,15 @@ class EditAward extends Component {
         return (
             <div className='editAward-background'>
                 <Breadcrumb style={{marginBottom: 40}}>
-                    <Breadcrumb.Item>Home</Breadcrumb.Item>
+                    <Breadcrumb.Item><Link to='/'>Home</Link></Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a>个人中心</a>
+                        个人中心
                     </Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a>奖项管理</a>
+                        <Link to='/award'>奖项管理</Link>
                     </Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a>奖项编辑</a>
+                        奖项编辑
                     </Breadcrumb.Item>
                 </Breadcrumb>
 

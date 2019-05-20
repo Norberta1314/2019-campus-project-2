@@ -441,10 +441,12 @@ def awards(request):
             reduce(
                 operator.or_,
                 query_list),
-            soft_del=False, organization__soft_del=False).order_by('-id').all()
+            soft_del=False,
+            organization__soft_del=False).order_by('-id').all().select_related('organization')
     else:
         award_all = Awards.objects.filter(
-            soft_del=False, organization__soft_del=False).order_by('-id').all()
+            soft_del=False,
+            organization__soft_del=False).order_by('-id').all().select_related('organization')
     paginator = Paginator(award_all, 10)
     page = request.GET.get('page', 1)
     try:
@@ -492,7 +494,8 @@ def awards(request):
 
 def get_award(request, award_id):
     try:
-        award = Awards.objects.filter(soft_del=False).get(id=award_id)
+        award = Awards.objects.filter(soft_del=False).get(
+            id=award_id).select_related('organization')
     except Exception as e:
         return HttpResponse(status=404)
 
@@ -718,42 +721,36 @@ def my_applys(request):
     start_time_f = html_escape(request.GET.get('start_time'))
     end_time_f = html_escape(request.GET.get('end_time'))
     apply_query_list = []
-    apply_query_sql_where = ''
-    temp_sql_list = []
+    is_not = False
 
     if apply_award_f is not None:
-        apply_query_sql_where += '`awards`.`name` like %s '
-        temp_sql_list.append('`awards`.`name` like %s ')
-        apply_query_list.append('%%%s%%' % apply_award_f)
-        # apply_query_list.append(Q(name__contains=apply_award_f))
+        apply_query_list.append(Q(award__name__contains=apply_award_f))
 
     uin = request.COOKIES.get('uin', '')
     user_qq = transform_uin(uin)
     user = request.user
     if check_state_f is not None:
         if check_state_f == '-1':
-            temp_sql_list.append('`my_applys`.`state` is null ')
-            # apply_query_list.append(Q(state=None))
+            # temp_sql_list.append('`my_applys`.`state` is null ')
+            is_not = True
         else:
-            temp_sql_list.append('`my_applys`.`state` = %s')
-            apply_query_list.append(check_state_f)
+            # temp_sql_list.append('`my_applys`.`state` = %s')
+            apply_query_list.append(Q(state=check_state_f))
     if start_time_f is not None and end_time_f is not None:
-        temp_sql_list.append('`my_applys`.`apply_time` BETWEEN %s AND %s')
-        apply_query_list.append(datetime.datetime.strptime(
-            start_time_f, "%Y-%m-%d"))
-        apply_query_list.append(datetime.datetime.strptime(
-            end_time_f, "%Y-%m-%d"))
-    if len(apply_query_list) > 0 or check_state_f is not None:
-        apply_query_sql_where = ' where (' + \
-            ' or '.join(temp_sql_list) + ') and'
-    else:
-        apply_query_sql_where = ' where '
+        apply_query_list.append(Q(apply_time__range=(datetime.datetime.strptime(
+            start_time_f, "%Y-%m-%d"), datetime.datetime.strptime(
+            end_time_f, "%Y-%m-%d"))))
+    # if len(apply_query_list) > 0 or check_state_f is not None:
+    #     apply_query_sql_where = ' where (' + \
+    #         ' or '.join(temp_sql_list) + ') and'
+    # else:
+    #     apply_query_sql_where = ' where '
+
     applys = get_my_apply(
         user,
         user_qq,
         apply_query_list,
-        apply_query_sql_where
-    )
+        is_not)
     paginator = Paginator(applys, 10)
     page = request.GET.get('page', 1)
     try:
@@ -904,7 +901,7 @@ def upload_attachment(request):
 @require_GET
 def get_apply_award(request, award_id):
     try:
-        award = Awards.objects.get(id=award_id)
+        award = Awards.objects.select_related('organization').get(id=award_id)
     except Exception as e:
         return HttpResponse(status=404)
     ret = award.to_json()
@@ -1011,7 +1008,8 @@ def update_myapply(request, myapply_id):
 
 def get_myapply(request, myapply_id):
     try:
-        myapply = MyApply.objects.get(id=myapply_id)
+        myapply = MyApply.objects.get(
+            id=myapply_id).select_related('attachment')
     except Exception as e:
         return HttpResponse(status=404)
     return render_json(myapply.to_json())

@@ -249,16 +249,12 @@ class applyDetail extends Component {
     return (
       <div className='Apply-background'>
         <Breadcrumb style={ {marginBottom: 40} }>
-          <Breadcrumb.Item>Home</Breadcrumb.Item>
-          <Breadcrumb.Item>
-            <Link to='/'>个人中心</Link>
-          </Breadcrumb.Item>
+          <Breadcrumb.Item><Link to='/'>Home</Link></Breadcrumb.Item>
+          <Breadcrumb.Item>个人中心</Breadcrumb.Item>
           <Breadcrumb.Item>
             <Link to='/apply'>我的申报</Link>
           </Breadcrumb.Item>
-          <Breadcrumb.Item>
-            <a>申报详情</a>
-          </Breadcrumb.Item>
+          <Breadcrumb.Item>申报详情</Breadcrumb.Item>
         </Breadcrumb>
 
         <Spin spinning={ this.state.spin }>

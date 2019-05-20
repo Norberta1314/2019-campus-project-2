@@ -295,7 +295,7 @@ class MyApply(models.Model):
     @classmethod
     def get_award_applys(cls, award):
         ret = []
-        applys = cls.objects.filter(award=award).all()
+        applys = cls.objects.filter(award=award).all().select_related('attachment')
         for item in applys:
             ret.append({'name': item.apply_info,
                         'state': item.state,

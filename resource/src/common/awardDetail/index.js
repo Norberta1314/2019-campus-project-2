@@ -1,9 +1,10 @@
 import React, {Component} from 'react';
 import {connect} from 'react-redux';
 import './style.scss'
-import {Form, Modal, Spin, Table, Tag} from 'antd';
+import {Breadcrumb, Form, Modal, Spin, Table, Tag} from 'antd';
 import * as actionCreators from "./store/actionCreators";
 import {levelEnum, stateEnum} from "../../utils/utils";
+import {Link} from "react-router-dom";
 
 
 class awardDetail extends Component {
@@ -69,7 +70,7 @@ class awardDetail extends Component {
                 key: 'attachment',
                 render: (value) => (
                     value == '-1' ? '无附件' : (
-                        <a href={value.url} target='_blank' >{value.attachment_name}</a>
+                        <a href={value.url} target='_blank'>{value.attachment_name}</a>
                     )
                 )
             }, {
@@ -96,7 +97,6 @@ class awardDetail extends Component {
             this.closeSpin()
         })
     }
-
 
 
     openSpin() {
@@ -160,6 +160,19 @@ class awardDetail extends Component {
         },]
         return (
             <div className='layout-background'>
+                <Breadcrumb style={{marginBottom: 40}}>
+                    <Breadcrumb.Item><Link to='/'>Home</Link></Breadcrumb.Item>
+                    <Breadcrumb.Item>
+                        个人中心
+                    </Breadcrumb.Item>
+                    <Breadcrumb.Item>
+                        <Link to='/award'>奖项管理</Link>
+                    </Breadcrumb.Item>
+                    <Breadcrumb.Item>
+                        奖项查看
+                    </Breadcrumb.Item>
+                </Breadcrumb>
+
                 <Spin spinning={this.state.spin}>
                     <Table columns={this.columns_detail} dataSource={data} showHeader={false}
                            style={{marginTop: '30px'}}
@@ -188,7 +201,8 @@ class awardDetail extends Component {
                                     </Form.Item>
                                     <Form.Item label='附件'>
                                         {show.attachment === -1 ? '无附件' : (
-                                            <a target='_blank' href={show.attachment.url}>{show.attachment.attachment_name}</a>
+                                            <a target='_blank'
+                                               href={show.attachment.url}>{show.attachment.attachment_name}</a>
                                         )}
                                     </Form.Item>
                                     <Form.Item label='评审结果'>

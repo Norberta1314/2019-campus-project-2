@@ -141,12 +141,12 @@ class Check extends Component {
         return (
             <div className='check-background'>
                 <Breadcrumb style={{marginBottom: 40}}>
-                    <Breadcrumb.Item>Home</Breadcrumb.Item>
+                    <Breadcrumb.Item><Link to='/'>Home</Link></Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a>个人中心</a>
+                        个人中心
                     </Breadcrumb.Item>
                     <Breadcrumb.Item>
-                        <a>我的审核</a>
+                        我的审核
                     </Breadcrumb.Item>
                 </Breadcrumb>
                 <Spin spinning={this.state.spin}>

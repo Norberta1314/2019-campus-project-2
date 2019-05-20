@@ -208,12 +208,12 @@ class Award extends Component {
     return (
       <div className='award-background'>
         <Breadcrumb style={ {marginBottom: 40} }>
-          <Breadcrumb.Item>Home</Breadcrumb.Item>
+          <Breadcrumb.Item><Link to='/'>Home</Link></Breadcrumb.Item>
           <Breadcrumb.Item>
-            <a>系统管理</a>
+            系统管理
           </Breadcrumb.Item>
           <Breadcrumb.Item>
-            <a>奖项管理</a>
+            奖项管理
           </Breadcrumb.Item>
         </Breadcrumb>
 

@@ -64,7 +64,6 @@ def valid_clone(data):
             raise InvalidData(u'不能为空')
 
 
-
 def valid_apply(data):
     for k, v in data.items():
         if v == '' or v is None:
@@ -103,7 +102,7 @@ def is_organ_head(self, user_qq, organ):
 
 
 def get_my_not_apply(self, user_qq):
-    applys, organs = get_my_applys(self, user_qq)
+    applys, organs, __ = get_my_applys(self, user_qq)
     not_awards_id = [item.award.id for item in applys]
     not_awards = Awards.objects.exclude(
         id__in=not_awards_id,
@@ -125,28 +124,33 @@ def get_my_not_apply(self, user_qq):
     return ret
 
 
-def get_my_applys(self, user_qq):
-    organs_user = OrganizationsUser.objects.filter(
-        user=user_qq, type=u'1', organization__soft_del=False).all()
+def get_my_applys(self, user_qq, query=[]):
     organs = Organizations.objects.filter(
-        organizationsuser__in=organs_user).all()
+        organizationsuser__type=u'1',
+        organizationsuser__user=user_qq).all()
     awards = Awards.objects.filter(
         organization__in=organs,
         soft_del=False).all()
-    applys = MyApply.objects.filter(award__in=awards, user=self).all()
-    return applys, organs
+
+    applys = MyApply.objects.filter(
+            award__in=awards, user=self).all()
+    filter_applys= []
+    if len(query) > 0:
+        filter_applys = MyApply.objects.filter(
+            reduce(operator.or_, query),
+            award__in=awards, user=self).all()
+    return applys, organs, filter_applys
 
 
-def get_my_apply(self, user_qq, apply_Q_list, sql_where_list):
-
-    applys, organs = get_my_applys(self, user_qq)
+def get_my_apply(self, user_qq, apply_Q_list, is_not=False):
+    applys, organs, filter_query = get_my_applys(self, user_qq, apply_Q_list)
     not_awards_id = [item.award.id for item in applys]
     not_awards = Awards.objects.exclude(
         id__in=not_awards_id,
         is_active=True).filter(
         soft_del=False,
         organization__soft_del=False,
-        organization__in=organs).order_by('-id').all()
+        organization__in=organs).order_by('-id').all().select_related('organization')
     ret = []
     for item in not_awards:
         ret.append({
@@ -159,6 +163,13 @@ def get_my_apply(self, user_qq, apply_Q_list, sql_where_list):
             'apply_info': None,
             'apply_time': None
         })
+
+    if is_not:
+        return ret
+
+    if len(apply_Q_list) > 0:
+        ret = []
+        applys = filter_query
 
     for item in applys:
         ret.append({
@@ -219,17 +230,13 @@ def get_my_apply(self, user_qq, apply_Q_list, sql_where_list):
 
 
 def get_my_check(self, user_qq):
-    organs = OrganizationsUser.objects.filter(user=user_qq, type=u'0').all()
-    awards = []
-    for item in organs:
-        temp = Awards.objects.filter(
-            organization=item.organization,
-            organization__soft_del=False,
-            soft_del=False).all()
-        for item_t in temp:
-            awards.append(item_t.id)
-
-    applys = MyApply.objects.filter(award_id__in=awards).order_by('-id').all()
+    awards = Awards.objects.filter(
+        organization__organizationsuser__type=u'0',
+        organization__organizationsuser__user=user_qq,
+        organization__soft_del=False,
+        soft_del=False).all()
+    applys = MyApply.objects.filter(award__in=awards).order_by(
+        '-id').all().prefetch_related('award', 'award__organization')
     ret = []
     for item in applys:
         ret.append({
