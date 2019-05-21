@@ -18,3 +18,8 @@ export const getAwardList = (page, cb) => {
     if(cb) cb()
   }
 }
+
+export const setApplyList = (newApplyList) => ({
+  type: actionTypes.SET_APALY_LIST,
+  newApplyList: newApplyList
+})

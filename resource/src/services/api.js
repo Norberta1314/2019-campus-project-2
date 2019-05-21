@@ -45,6 +45,11 @@ export async function queryAwards(param) {
     return request(`awards?page=${page}&${buildHttpQuery(query)}`)
 }
 
+export async function queryApplys(param) {
+    const {page = 1, query = {}} = param
+    return request(`my/applys?page=${page}&${buildHttpQuery(query)}`)
+}
+
 export async function queryAward(id) {
     return request(`award/${id}`)
 }
@@ -127,7 +132,6 @@ export async function rejectApply(id) {
 export async function queryIndexApplys() {
     return request(`index/applys`)
 }
-
 
 export async function decideAward(param) {
     const {id, data} = param

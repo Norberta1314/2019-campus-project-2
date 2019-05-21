@@ -14,6 +14,10 @@ export default (state = defaultState, action) => {
       newState[value] = action[value]
     })
     return newState
+  } else if (action.type === actionTypes.SET_AWARD_LIST) {
+    const newState = deepClone(state)
+    newState.data = action.awards
+    return newState
   }
   return state
 }

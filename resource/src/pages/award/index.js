@@ -1,12 +1,12 @@
 import React, { Component } from 'react';
 import { connect } from 'react-redux';
 import {
-  Form, Button, Input, Dropdown, Menu, Icon, DatePicker, Table, Divider, Breadcrumb, Popconfirm, Spin
+  Form, Button, Input, Dropdown, Menu, Icon, DatePicker, Table, Divider, Breadcrumb, Popconfirm, Spin, Select
 } from 'antd'
 import './style.scss'
 import 'antd/dist/antd.css';
 import * as actionCreators from './store/actionCreators';
-import { dAward } from '../../services/api';
+import { dAward, queryApplys, queryAwards } from '../../services/api';
 import { levelEnum, suffix } from '../../utils/utils';
 import { Link } from 'react-router-dom';
 
@@ -42,7 +42,8 @@ class Award extends Component {
       cloneList: []
     }
     this.toCreate = this.toCreate.bind(this)
-    this.columns = [{
+    this.columns = [
+      {
       title: '所属单位',
       dataIndex: 'organization',
       key: 'organization',
@@ -193,10 +194,41 @@ class Award extends Component {
     })
   }
 
+  handleSubmit() {
+    const form = this.props.form;
+    form.validateFields(async (err, values) => {
+      if ( !err ) {
+        // console.log(values)
+        let data = {}
+
+        if (values.apply_award) {
+          data.apply_award = values.apply_award
+        } else if (values.check_state) {
+          data.check_state = values.check_state
+        } else if (values.organization) {
+          data.organization = values.organization
+        } else if (values.time) {
+          data.start_time = values.time[0].format('YYYY-MM-DD')
+          data.end_time = values.time[1].format('YYYY-MM-DD')
+        }
+
+        this.toSubmit(data)
+
+      }
+    })
+  }
+
+  async toSubmit(data) {
+    const newApplyList = await queryAwards({query: data})
+    this.props.setAwardList(newApplyList)
+    console.log(newApplyList)
+  }
 
   render() {
     const {RangePicker} = DatePicker
-    const {total, data, currentPage} = this.props
+    const {total, data, currentPage, form} = this.props
+    const {getFieldDecorator} = form;
+    const Option = Select.Option;
 
     let pagination = {
       total: total,
@@ -205,6 +237,7 @@ class Award extends Component {
       onChange: (page) => this.onChange(page),
       current: currentPage
     }
+
     return (
       <div className='award-background'>
         <Breadcrumb style={ {marginBottom: 40} }>
@@ -228,49 +261,52 @@ class Award extends Component {
         <Form layout="inline">
           <Form.Item
             label="申报奖项">
-            <Input
-              type="text"
-              size='small'
-              style={ {width: '80%', marginRight: '3%'} }
-            />
+            { getFieldDecorator('apply_award')(
+              <Input
+                type="text"
+                size='small'
+                style={ {width: '80%', marginRight: '3%'} }
+              />
+            ) }
           </Form.Item>
           <Form.Item
             label="所属组织">
-            <Input
-              type="text"
-              size='small'
-              style={ {width: '80%', marginRight: '3%'} }
-            />
+            { getFieldDecorator('organization')(
+              <Input
+                type="text"
+                size='small'
+                style={ {width: '80%', marginRight: '3%'} }
+              />
+            ) }
           </Form.Item>
           <Form.Item
             label="审核状态">
-            <Dropdown overlay={ () =>
-              <Menu onClick={ onClickSearchApplyState }>
-                { this.state.ApplyState.map((item) =>
-                  <Menu.Item key={ item.key }
-                             onClick={ onClickSearchApplyState }>
-                    { item.applyName }
-                  </Menu.Item>
-                ) }
-              </Menu>
-            }>
-              <a className="ant-dropdown-link" href="#">
-                { this.state.ApplyState[this.state.searchCurrentApplyState].applyName } <Icon
-                type="down"/>
-              </a>
-            </Dropdown>
+            { getFieldDecorator('check_state')(
+              <Select defaultValue={ this.state.ApplyState[0] } style={ {width: 120} }>
+                {
+                  this.state.ApplyState.map((item) => (
+                    <Option value={ item.key }>{ item.applyName }</Option>
+                  ))
+                }
+              </Select>
+            ) }
+
           </Form.Item>
           <Form.Item
             label="申报时间"
             style={ {marginLeft: '20px'} }
           >
-            <RangePicker/>
+            { getFieldDecorator('time')(
+              <RangePicker/>
+            ) }
+
           </Form.Item>
           <Form.Item>
             <Button
               type="primary"
               htmlType="submit"
               style={ {marginLeft: '20px'} }
+              onClick={ () => this.handleSubmit() }
             >
               查询
             </Button>
@@ -283,8 +319,6 @@ class Award extends Component {
       </div>
     );
   }
-
-
 }
 
 const mapState = (state) => ({
@@ -297,6 +331,12 @@ const mapDispatch = (dispatch) => ({
   changePage(page = 1, cb) {
     const action = actionCreators.changePageData(page, cb)
     dispatch(action)
+  },
+  setAwardList(newAwardList) {
+    const action = actionCreators.setAwardList(newAwardList)
+    dispatch(action)
   }
 })
-export default connect(mapState, mapDispatch)(Award);
+
+const awardForm = Form.create({})(Award)
+export default connect(mapState, mapDispatch)(awardForm);
