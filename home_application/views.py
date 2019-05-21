@@ -495,7 +495,7 @@ def awards(request):
 def get_award(request, award_id):
     try:
         award = Awards.objects.filter(soft_del=False).get(
-            id=award_id).select_related('organization')
+            id=award_id)
     except Exception as e:
         return HttpResponse(status=404)
 
@@ -901,7 +901,7 @@ def upload_attachment(request):
 @require_GET
 def get_apply_award(request, award_id):
     try:
-        award = Awards.objects.select_related('organization').get(id=award_id)
+        award = Awards.objects.get(id=award_id)
     except Exception as e:
         return HttpResponse(status=404)
     ret = award.to_json()
@@ -949,6 +949,7 @@ def update_myapply(request, myapply_id):
                     del data['attachment_id']
                     MyApply.objects.filter(id=myapply_id).update(
                         state=u'0',
+                        attachment=None,
                         **data)
                 else:
                     MyApply.objects.filter(id=myapply_id).update(
@@ -959,8 +960,9 @@ def update_myapply(request, myapply_id):
 
             if data['attachment_id'] == -1:
                 del data['attachment_id']
-
-                MyApply.objects.filter(id=myapply_id).update(**data)
+                MyApply.objects.filter(
+                    id=myapply_id).update(
+                    attachment=None, **data)
             else:
                 MyApply.objects.filter(id=myapply_id).update(**data)
     except Exception as e:
@@ -1009,7 +1011,7 @@ def update_myapply(request, myapply_id):
 def get_myapply(request, myapply_id):
     try:
         myapply = MyApply.objects.get(
-            id=myapply_id).select_related('attachment')
+            id=myapply_id)
     except Exception as e:
         return HttpResponse(status=404)
     return render_json(myapply.to_json())
