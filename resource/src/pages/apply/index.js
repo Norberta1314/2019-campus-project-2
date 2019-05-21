@@ -20,13 +20,13 @@ class Apply
     super(props)
     this.state = {
       ApplyState: [
-        {key: '-2', applyName: '不限'},
-        {key: '-1', applyName: '未审核'},
-        {key: '1', applyName: '审核中'},
-        {key: '2', applyName: '未通过'},
-        {key: '3', applyName: '通过'},
+        {key: 0, applyName: '不限'},
+        {key: '-1', applyName: '未申请'},
+        {key: '0', applyName: '审核中'},
+        {key: '1', applyName: '未通过'},
+        {key: '2', applyName: '通过'},
         {key: '4', applyName: '已获奖'},
-        {key: '5', applyName: '未获奖'}
+        {key: '3', applyName: '未获奖'}
       ],
       searchCurrentApplyState: 1,
     }

@@ -35,8 +35,8 @@ class Award extends Component {
     super(props)
     this.state = {
       ApplyState: [
-        {key: 1, applyName: '生效中'},
-        {key: 2, applyName: '已过期'},
+        {key: '1', applyName: '生效中'},
+        {key: '0', applyName: '已过期'},
       ],
       searchCurrentApplyState: 1,
       cloneList: []
