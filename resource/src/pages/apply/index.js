@@ -244,7 +244,7 @@ class Apply
           </Form.Item>
         </Form>
         <Spin spinning={ this.state.spin }>
-          <Table columns={ this.columns } dataSource={ applyList } style={ {marginTop: '30px'} } rowKey='award_id'/>
+          <Table columns={ this.columns } dataSource={ applyList } style={ {marginTop: '30px'} } rowKey='award_id' pagination={ pagination }/>
         </Spin>
       </div>
     );
